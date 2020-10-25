@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define MAX_PROCCESSES 10
+#define MAX_PROCCESSES 5
 
 struct Alien
 {
@@ -8,15 +8,18 @@ struct Alien
     int period;
 };
 
-struct AlienList
+int isPlanificable(struct Alien *alien, struct AlienList *alienList)
 {
-    struct Alien aliens[MAX_PROCCESSES];
-    int length;
-};
-
-int initialize(struct AlienList *alienList)
-{
-    alienList->length = 0;
+    float sum = 0;
+    for (int i = 0; i < alienList->length; i++)
+    {
+        sum += alienList->aliens[i].energy / alienList->aliens[i].period;
+    }
+    if (sum < 1)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 int addAlien(int energy, int period, struct AlienList *alienList)
@@ -27,10 +30,19 @@ int addAlien(int energy, int period, struct AlienList *alienList)
         struct Alien newAlien;
         newAlien.energy = energy;
         newAlien.period = period;
-        alienList->aliens[alienList->length] = newAlien;
-        alienList->length++;
+        if (isPlanificable(&newAlien, alienList))
+        {
+            alienList->aliens[alienList->length] = newAlien;
+            alienList->length++;
+        }
+        else
+        {
+            printf("Error: proccess is not planificable.\n");
+            return 0;
+        }
         return 1;
     }
+    printf("Error: max amount of proccesses is %d.\n", MAX_PROCCESSES);
     return 0;
 }
 
@@ -38,11 +50,13 @@ int main()
 {
     // Initialize alienList
     struct AlienList alienList;
-    initialize(&alienList);
-    addAlien(10, 10, &alienList);
-    addAlien(11, 11, &alienList);
-    addAlien(12, 12, &alienList);
-    addAlien(13, 13, &alienList);
+    initializeAlienList(&alienList);
+    addAlien(3, 10, &alienList);
+    addAlien(1, 11, &alienList);
+    addAlien(2, 12, &alienList);
+    addAlien(1, 13, &alienList);
+    addAlien(2, 13, &alienList);
+    addAlien(3, 13, &alienList);
     for (int i = 0; i < alienList.length; i++)
     {
         printf("%d. Energy: %d. Period: %d.\n", i, alienList.aliens[i].period, alienList.aliens[i].energy);
