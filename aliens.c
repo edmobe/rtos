@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #define MAX_PROCESSES 5
 #define RM_MAX 0.6931471807
@@ -9,7 +10,13 @@ struct Alien
     int energy;
     int period;
     struct Alien *next;
+    pthread_t threadId;
 };
+
+void *print(void *arg)
+{
+    printf("Thread initialized, energy = %d\n", *((int *)arg));
+}
 
 /* Given a reference (pointer to pointer) to the head 
    of a list and an int, appends a new node at the end 
@@ -18,14 +25,14 @@ struct Alien
         0: RM
         1: EDF
 */
-int append(struct Alien **head_ref, int energy, int period, int algorithmId)
+int append(struct Alien **head_ref, int energy, int period)
 {
     /* 1. allocate node */
     struct Alien *newAlien = (struct Alien *)malloc(sizeof(struct Alien));
 
-    struct Alien *last = *head_ref;                        /* used in step 5*/
-    int len = 0;                                           /* used in step 5*/
-    float planificableSum = (float)energy / (float)period; /* Determines if the new process can be scheduled */
+    struct Alien *last = *head_ref;                    /* used in step 5*/
+    int len = 0;                                       /* used in step 5*/
+    float utilization = (float)energy / (float)period; /* Determines if the new process can be scheduled */
 
     /* 2. put in the data  */
     newAlien->energy = energy;
@@ -38,41 +45,32 @@ int append(struct Alien **head_ref, int energy, int period, int algorithmId)
     /* 4. If the Linked List is empty, then make the new node as head */
     if (*head_ref == NULL)
     {
-        if (planificableSum >= 1)
+        if (utilization >= 1)
         {
             printf("Error: proccess is not planificable.\n");
             return 0;
         }
+        pthread_create(&newAlien->threadId, NULL, print, &newAlien->energy);
+        pthread_join(newAlien->threadId, NULL);
         *head_ref = newAlien;
         return 1;
     }
 
-    planificableSum += (float)last->energy / (float)last->period;
+    utilization += (float)last->energy / (float)last->period;
     len++;
 
     /* 5. Else traverse till the last node */
     while (last->next != NULL)
     {
         last = last->next;
-        planificableSum += (float)last->energy / (float)last->period;
+        utilization += (float)last->energy / (float)last->period;
         len++;
     }
 
-    if (planificableSum >= 1)
+    if (utilization >= 1)
     {
         printf("Error: proccess is not planificable.\n");
         return 0;
-    }
-
-    int lengthLimit;
-
-    if (algorithmId)
-    {
-        lengthLimit = MAX_PROCESSES;
-    }
-    else
-    {
-        lengthLimit = RM_MAX;
     }
 
     if (len + 1 > MAX_PROCESSES)
@@ -81,8 +79,13 @@ int append(struct Alien **head_ref, int energy, int period, int algorithmId)
         return 0;
     }
 
-    /* 6. Change the next of last node */
+    /* 6. Start thread */
+    pthread_create(&newAlien->threadId, NULL, print, &newAlien->energy);
+    pthread_join(newAlien->threadId, NULL);
+
+    /* 7. Change the next of last node */
     last->next = newAlien;
+
     return 1;
 }
 
@@ -96,7 +99,7 @@ void printAlienList(struct Alien *alien)
         sum += (float)alien->energy / (float)alien->period;
         alien = alien->next;
     }
-    printf("\nPlanificable analysis: %f", sum);
+    printf("\nUtilization: %f\n", sum);
 }
 
 int main()
@@ -104,6 +107,8 @@ int main()
     /* Start with the empty list */
     struct Alien *head = NULL;
 
+    /*
+    // Test
     append(&head, 2, 9, 1);
     append(&head, 3, 20, 1);
     append(&head, 5, 30, 1);
@@ -113,6 +118,11 @@ int main()
     append(&head, 2, 15, 1);
     append(&head, 1, 18, 1);
     append(&head, 2, 15, 1);
+    */
+
+    append(&head, 1, 6);
+    append(&head, 2, 9);
+    append(&head, 6, 18);
 
     printf("Created Linked list is: ");
     printAlienList(head);
