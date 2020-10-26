@@ -3,17 +3,23 @@
 #include <pthread.h>
 
 #define MAX_PROCESSES 5
+#define DIMENSIONS 20
 #define RM_MAX 0.6931471807
 
 struct Alien
 {
+    int finished;
+    int posX;
+    int posY;
+    int direction;
     int energy;
     int period;
     struct Alien *next;
     pthread_t threadId;
 };
 
-void *print(void *arg)
+void *
+print(void *arg)
 {
     printf("Thread initialized, energy = %d\n", *((int *)arg));
 }
@@ -37,6 +43,10 @@ int append(struct Alien **head_ref, int energy, int period)
     /* 2. put in the data  */
     newAlien->energy = energy;
     newAlien->period = period;
+    newAlien->direction = 'r';
+    newAlien->finished = 0;
+    newAlien->posX = 0;
+    newAlien->posY = 7;
 
     /* 3. This new node is going to be the last node, so make next  
           of it as NULL */
@@ -102,6 +112,25 @@ void printAlienList(struct Alien *alien)
     printf("\nUtilization: %f\n", sum);
 }
 
+void printMaze(int maze[DIMENSIONS][DIMENSIONS])
+{
+    for (int i = 0; i < DIMENSIONS; i++)
+    {
+        for (int j = 0; j < DIMENSIONS; j++)
+        {
+            if (maze[i][j])
+            {
+                printf("██");
+            }
+            else
+            {
+                printf("  ");
+            }
+        }
+        printf("\n");
+    }
+}
+
 int main()
 {
     /* Start with the empty list */
@@ -127,6 +156,32 @@ int main()
     printf("Created Linked list is: ");
     printAlienList(head);
     printf("\n");
+
+    int maze[DIMENSIONS][DIMENSIONS] =
+        {
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1},
+            {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
+            {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1},
+            {0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
+            {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+            {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1},
+            {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+            {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+            {1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+            {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        };
+
+    printMaze(maze);
 
     return 0;
 }
