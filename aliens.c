@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+/*=========================== CONSTANTS ===========================*/
 #define MAX_PROCESSES 5
 #define DIMENSIONS 20
-#define RM_MAX 0.6931471807
+// #define RM_MAX 0.6931471807
 
+/*=========================== STRUCTURES ===========================*/
 struct Alien
 {
     int finished;
@@ -23,11 +25,21 @@ struct AlienArray
     int length;
 };
 
+/*=========================== INITIALIZING METHODS ===========================*/
+// Initializes an alien array.
 void initialize(struct AlienArray *alienArray)
 {
     alienArray->length = 0;
 }
 
+void *
+print(void *arg)
+{
+    printf("Thread initialized, energy = %d\n", *((int *)arg));
+}
+
+/*=========================== CALCULATIONS ===========================*/
+// Calculates the utilization of the processes (aliens)
 float getUtilization(struct AlienArray *alienArray)
 {
     float utilization = 0;
@@ -39,12 +51,40 @@ float getUtilization(struct AlienArray *alienArray)
     return utilization;
 }
 
-void *
-print(void *arg)
+int validMove(struct AlienArray *alienArray, int maze[DIMENSIONS][DIMENSIONS],
+              int currentDirection, int destinationX, int destinationY)
 {
-    printf("Thread initialized, energy = %d\n", *((int *)arg));
+    if (maze[destinationY][destinationX])
+    {
+        // There is a wall
+        printf("Invalid move: there is a wall.\n");
+        return 0;
+    }
+
+    if (destinationX < 0 || destinationY < 0)
+    {
+        // Out of bounds
+        printf("Invalid move: out of bounds.\n");
+        return 0;
+    }
+
+    for (size_t i = 0; i < alienArray->length; i++)
+    {
+        // Collision
+        if (alienArray->aliens[i].direction == currentDirection &&
+            alienArray->aliens[i].posX == destinationX &&
+            alienArray->aliens[i].posY == destinationY)
+        {
+            printf("Invalid move: must wait for the alien.\n");
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
+/*=========================== ARRAY OPERATIONS ===========================*/
+// If a new process (alien) can be managed, creates it and appends it to the alien array.
 int append(struct AlienArray *alienArray, int energy, int period)
 {
     /* Determines if the new process can be scheduled */
@@ -78,6 +118,7 @@ int append(struct AlienArray *alienArray, int energy, int period)
     return 1;
 }
 
+/*=========================== DISPLAY ===========================*/
 // This function prints contents of the alien array
 void printAlienArray(struct AlienArray *alienArray)
 {
@@ -93,6 +134,7 @@ void printAlienArray(struct AlienArray *alienArray)
     printf("\nUtilization: %f\n", sum);
 }
 
+// This function prints the maze
 void printMaze(int maze[DIMENSIONS][DIMENSIONS])
 {
     for (int i = 0; i < DIMENSIONS; i++)
@@ -112,6 +154,7 @@ void printMaze(int maze[DIMENSIONS][DIMENSIONS])
     }
 }
 
+/*=========================== MAIN ===========================*/
 int main()
 {
     /* Start with the empty list */
@@ -120,7 +163,7 @@ int main()
 
     append(&alienArray, 1, 6);
     append(&alienArray, 2, 9);
-    append(&alienArray, 17, 18);
+    append(&alienArray, 6, 18);
 
     printf("Created Linked list is: ");
     printAlienArray(&alienArray);
@@ -151,6 +194,12 @@ int main()
         };
 
     printMaze(maze);
+
+    alienArray.aliens[0].posX = 2;
+    alienArray.aliens[1].posX = 1;
+
+    printf("Valid move? %d\n",
+           validMove(&alienArray, maze, alienArray.aliens[1].direction, 2, alienArray.aliens[1].posY));
 
     return 0;
 }
