@@ -22,71 +22,58 @@ struct Alien
 struct AlienArray
 {
     struct Alien aliens[MAX_PROCESSES];
-    int length;
+    int nextDeadline[MAX_PROCESSES], remainingEnergies[MAX_PROCESSES], newPeriods[MAX_PROCESSES];
+    int length, higherPriorityDeadline, higherPriorityIndex;
 };
-/*=========================== EDF ===========================*/
-void edf(struct AlienArray *alienArray)
+
+/*=========================== EDF SCHEDULING ===========================*/
+void edf(struct AlienArray *alienArray, int iteration)
 {
-    int nextDeadline[alienArray->length], remainingEnergies[alienArray->length], newPeriods[alienArray->length];
-    int higherPriorityDeadline, higherPriorityIndex;
-
-    // Get updated periods and remaining energies
-    for (int i = 0; i < alienArray->length; i++)
+    // Get the higher priority alien
+    alienArray->higherPriorityDeadline = __INT_MAX__;
+    alienArray->higherPriorityIndex = -1;
+    for (int j = 0; j < alienArray->length; j++)
     {
-        nextDeadline[i] = alienArray->aliens[i].period;
-        remainingEnergies[i] = alienArray->aliens[i].energy;
-        newPeriods[i] = 0;
-    }
-
-    // EDF loop
-    for (int i = 0; i < 26; i++)
-    {
-        // Get the higher priority alien
-        higherPriorityDeadline = __INT_MAX__;
-        higherPriorityIndex = -1;
-        for (int j = 0; j < alienArray->length; j++)
+        if (alienArray->remainingEnergies[j] > 0)
         {
-            if (remainingEnergies[j] > 0)
+            if (alienArray->higherPriorityDeadline > alienArray->nextDeadline[j] ||
+                (alienArray->higherPriorityDeadline == alienArray->nextDeadline[j] &&
+                 alienArray->remainingEnergies[alienArray->higherPriorityIndex] > alienArray->remainingEnergies[j]))
             {
-                if (higherPriorityDeadline > nextDeadline[j] ||
-                    (higherPriorityDeadline == nextDeadline[j] &&
-                     remainingEnergies[higherPriorityIndex] > remainingEnergies[j]))
-                {
-                    higherPriorityDeadline = nextDeadline[j];
-                    higherPriorityIndex = j;
-                }
+                alienArray->higherPriorityDeadline = alienArray->nextDeadline[j];
+                alienArray->higherPriorityIndex = j;
             }
         }
+    }
 
-        // Print
-        printf("From %d to %d: Process %d\n", i, i + 1, higherPriorityIndex + 1);
-        remainingEnergies[higherPriorityIndex]--;
+    // Print
+    printf("From %d to %d: Process %d\n", iteration, iteration + 1, alienArray->higherPriorityIndex + 1);
+    alienArray->remainingEnergies[alienArray->higherPriorityIndex]--;
 
-        // Next deadline
-        for (int j = 0; j < alienArray->length; j++)
+    // Next deadline
+    for (int j = 0; j < alienArray->length; j++)
+    {
+        if (alienArray->newPeriods[j] == (alienArray->aliens[j].period - 1))
         {
-            if (newPeriods[j] == (alienArray->aliens[j].period - 1))
+            alienArray->nextDeadline[j] = alienArray->aliens[j].period;
+            alienArray->remainingEnergies[j] = alienArray->aliens[j].energy;
+            alienArray->newPeriods[j] = 0;
+        }
+        else
+        {
+            if (alienArray->nextDeadline[j] > 0)
             {
-                nextDeadline[j] = alienArray->aliens[j].period;
-                remainingEnergies[j] = alienArray->aliens[j].energy;
-                newPeriods[j] = 0;
+                alienArray->nextDeadline[j]--;
             }
             else
             {
-                if (nextDeadline[j] > 0)
+                if (alienArray->remainingEnergies[j] > 0)
                 {
-                    nextDeadline[j]--;
+                    printf("Error: Process %d cannot be scheduled\n", j);
+                    return;
                 }
-                else
-                {
-                    if (remainingEnergies[j] > 0)
-                    {
-                        printf("Error: Process %d cannot be scheduled\n", j);
-                        return;
-                    }
-                }
-                newPeriods[j]++;
             }
+            alienArray->newPeriods[j]++;
         }
     }
 }
@@ -181,6 +168,14 @@ int append(struct AlienArray *alienArray, int energy, int period)
     pthread_join(alienArray->aliens[alienArray->length].threadId, NULL);
     alienArray->length++;
 
+    // Update periods and remaining energies
+    for (int i = 0; i < alienArray->length; i++)
+    {
+        alienArray->nextDeadline[i] = alienArray->aliens[i].period;
+        alienArray->remainingEnergies[i] = alienArray->aliens[i].energy;
+        alienArray->newPeriods[i] = 0;
+    }
+
     return 1;
 }
 
@@ -233,7 +228,7 @@ int main()
     append(&alienArray, 2, 9);
     append(&alienArray, 6, 18);
     */
-    append(&alienArray, 3, 6);
+    append(&alienArray, 2, 6);
     append(&alienArray, 4, 9);
 
     printf("Created Linked list is: ");
@@ -272,7 +267,15 @@ int main()
     printf("Valid move? %d\n",
            validMove(&alienArray, maze, alienArray.aliens[1].direction, 2, alienArray.aliens[1].posY));
 
-    edf(&alienArray);
+    for (size_t i = 0; i < 26; i++)
+    {
+        if (i == 9)
+        {
+            append(&alienArray, 4, 9);
+            append(&alienArray, 1, 9);
+        }
+        edf(&alienArray, i);
+    }
 
     return 0;
 }
