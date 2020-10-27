@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 /*=========================== CONSTANTS ===========================*/
 #define MAX_PROCESSES 5
@@ -8,15 +9,34 @@
 #define MAX_ITERATIONS 1000
 // #define RM_MAX 0.6931471807
 
+static int MAZE[DIMENSIONS][DIMENSIONS] =
+    {
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+};
+
 /*=========================== STRUCTURES ===========================*/
 struct Alien
 {
-    int finished;
-    int posX;
-    int posY;
-    int direction;
-    int energy;
-    int period;
+    int id, finished, posX, posY, direction, energy, period;
     pthread_t threadId;
 };
 
@@ -33,91 +53,88 @@ struct Report
     int log[MAX_ITERATIONS]; // [from, to, pid]
 };
 
+/*=========================== GLOBAL VARIABLES ===========================*/
+static int currentThread = -1;
+static struct AlienArray alienArray;
+static struct Report report;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /*=========================== EDF SCHEDULING ===========================*/
-void edf(struct AlienArray *alienArray, struct Report *report, int iteration)
+void edf(int iteration)
 {
     // Get the higher priority alien
-    alienArray->higherPriorityDeadline = __INT_MAX__;
-    alienArray->higherPriorityIndex = -1;
-    for (int j = 0; j < alienArray->length; j++)
+    alienArray.higherPriorityDeadline = __INT_MAX__;
+    alienArray.higherPriorityIndex = -1;
+    for (int j = 0; j < alienArray.length; j++)
     {
-        if (alienArray->remainingEnergies[j] > 0)
+        if (alienArray.remainingEnergies[j] > 0)
         {
-            if (alienArray->higherPriorityDeadline > alienArray->nextDeadline[j] ||
-                (alienArray->higherPriorityDeadline == alienArray->nextDeadline[j] &&
-                 alienArray->remainingEnergies[alienArray->higherPriorityIndex] > alienArray->remainingEnergies[j]))
+            if (alienArray.higherPriorityDeadline > alienArray.nextDeadline[j] ||
+                (alienArray.higherPriorityDeadline == alienArray.nextDeadline[j] &&
+                 alienArray.remainingEnergies[alienArray.higherPriorityIndex] > alienArray.remainingEnergies[j]))
             {
-                alienArray->higherPriorityDeadline = alienArray->nextDeadline[j];
-                alienArray->higherPriorityIndex = j;
+                alienArray.higherPriorityDeadline = alienArray.nextDeadline[j];
+                alienArray.higherPriorityIndex = j;
             }
         }
     }
 
     // Add to report
-    report->log[iteration] = alienArray->higherPriorityIndex;
-    report->iterations++;
+    report.log[iteration] = alienArray.higherPriorityIndex;
+    report.iterations++;
+    printf("From %d to %d: Process %d\n", iteration, iteration + 1, alienArray.higherPriorityIndex);
 
     // Spend energy
-    alienArray->remainingEnergies[alienArray->higherPriorityIndex]--;
+    pthread_mutex_lock(&mutex);
+    currentThread = alienArray.higherPriorityIndex;
+    pthread_mutex_unlock(&mutex);
+    alienArray.remainingEnergies[alienArray.higherPriorityIndex]--;
 
     // Next deadline
-    for (int j = 0; j < alienArray->length; j++)
+    for (int j = 0; j < alienArray.length; j++)
     {
-        if (alienArray->newPeriods[j] == (alienArray->aliens[j].period - 1))
+        if (alienArray.newPeriods[j] == (alienArray.aliens[j].period - 1))
         {
-            alienArray->nextDeadline[j] = alienArray->aliens[j].period;
-            alienArray->remainingEnergies[j] = alienArray->aliens[j].energy;
-            alienArray->newPeriods[j] = 0;
+            alienArray.nextDeadline[j] = alienArray.aliens[j].period;
+            alienArray.remainingEnergies[j] = alienArray.aliens[j].energy;
+            alienArray.newPeriods[j] = 0;
         }
         else
         {
-            if (alienArray->nextDeadline[j] > 0)
+            if (alienArray.nextDeadline[j] > 0)
             {
-                alienArray->nextDeadline[j]--;
+                alienArray.nextDeadline[j]--;
             }
             else
             {
-                if (alienArray->remainingEnergies[j] > 0)
+                if (alienArray.remainingEnergies[j] > 0)
                 {
                     printf("Error: Process %d cannot be scheduled\n", j);
                     return;
                 }
             }
-            alienArray->newPeriods[j]++;
+            alienArray.newPeriods[j]++;
         }
     }
 }
 
 /*=========================== INITIALIZING METHODS ===========================*/
-// Initializes an alien array.
-void initialize(struct AlienArray *alienArray, struct Report *report)
+// Initializes an alien array and the final report.
+void initialize()
 {
-    alienArray->length = 0;
-    report->iterations = 0;
+    alienArray.length = 0;
+    report.iterations = 0;
 }
 
-void *print(void *arg)
+/*=========================== ALIEN METHODS ===========================*/
+void move(int id)
 {
-    printf("Thread initialized, energy = %d\n", *((int *)arg));
+    printf("Moving alien %d\n", id);
 }
 
-/*=========================== CALCULATIONS ===========================*/
-// Calculates the utilization of the processes (aliens)
-float getUtilization(struct AlienArray *alienArray)
+int validMove(int currentDirection, int destinationX, int destinationY)
 {
-    float utilization = 0;
-    for (int i = 0; i < alienArray->length; i++)
-    {
-        if (!alienArray->aliens[i].finished)
-            utilization += (float)alienArray->aliens[i].energy / (float)alienArray->aliens[i].period;
-    }
-    return utilization;
-}
-
-int validMove(struct AlienArray *alienArray, int maze[DIMENSIONS][DIMENSIONS],
-              int currentDirection, int destinationX, int destinationY)
-{
-    if (maze[destinationY][destinationX])
+    if (MAZE[destinationY][destinationX])
     {
         // There is a wall
         printf("Invalid move: there is a wall.\n");
@@ -131,12 +148,12 @@ int validMove(struct AlienArray *alienArray, int maze[DIMENSIONS][DIMENSIONS],
         return 0;
     }
 
-    for (size_t i = 0; i < alienArray->length; i++)
+    for (size_t i = 0; i < alienArray.length; i++)
     {
         // Collision
-        if (alienArray->aliens[i].direction == currentDirection &&
-            alienArray->aliens[i].posX == destinationX &&
-            alienArray->aliens[i].posY == destinationY)
+        if (alienArray.aliens[i].direction == currentDirection &&
+            alienArray.aliens[i].posX == destinationX &&
+            alienArray.aliens[i].posY == destinationY)
         {
             printf("Invalid move: must wait for the alien.\n");
             return 0;
@@ -146,9 +163,37 @@ int validMove(struct AlienArray *alienArray, int maze[DIMENSIONS][DIMENSIONS],
     return 1;
 }
 
-/*=========================== ARRAY OPERATIONS ===========================*/
+void *print(void *arg)
+{
+    struct Alien *alien = arg;
+    printf("Thread %d initialized.\n", alien->id);
+    while (1)
+    {
+        pthread_mutex_lock(&mutex);
+        if (currentThread == alien->id)
+        {
+            currentThread = -1;
+            move(alien->id);
+        }
+        pthread_mutex_unlock(&mutex);
+    }
+}
+
+/*=========================== ALIEN ARRAY OPERATIONS ===========================*/
+// Calculates the utilization of the processes (aliens)
+float getUtilization()
+{
+    float utilization = 0;
+    for (int i = 0; i < alienArray.length; i++)
+    {
+        if (!alienArray.aliens[i].finished)
+            utilization += (float)alienArray.aliens[i].energy / (float)alienArray.aliens[i].period;
+    }
+    return utilization;
+}
+
 // If a new process (alien) can be managed, creates it and appends it to the alien array.
-int append(struct AlienArray *alienArray, int energy, int period)
+int append(int energy, int period)
 {
     /* Determines if the new process can be scheduled */
     float utilization = getUtilization(alienArray);
@@ -160,7 +205,7 @@ int append(struct AlienArray *alienArray, int energy, int period)
         return 0;
     }
 
-    if (alienArray->length + 1 > MAX_PROCESSES)
+    if (alienArray.length + 1 > MAX_PROCESSES)
     {
         printf("Error: max amount of proccesses is %d.\n", MAX_PROCESSES);
         return 0;
@@ -168,22 +213,23 @@ int append(struct AlienArray *alienArray, int energy, int period)
 
     printf("Utilization: %f\n", utilization);
 
-    alienArray->aliens[alienArray->length].energy = energy;
-    alienArray->aliens[alienArray->length].period = period;
-    alienArray->aliens[alienArray->length].direction = 'r';
-    alienArray->aliens[alienArray->length].finished = 0;
-    alienArray->aliens[alienArray->length].posX = 0;
-    alienArray->aliens[alienArray->length].posY = 7;
-    pthread_create(&alienArray->aliens[alienArray->length].threadId, NULL, print, &alienArray->aliens[alienArray->length].energy);
-    pthread_join(alienArray->aliens[alienArray->length].threadId, NULL);
-    alienArray->length++;
+    alienArray.aliens[alienArray.length].id = alienArray.length;
+    alienArray.aliens[alienArray.length].energy = energy;
+    alienArray.aliens[alienArray.length].period = period;
+    alienArray.aliens[alienArray.length].direction = 'r';
+    alienArray.aliens[alienArray.length].finished = 0;
+    alienArray.aliens[alienArray.length].posX = 0;
+    alienArray.aliens[alienArray.length].posY = 7;
+    pthread_create(&alienArray.aliens[alienArray.length].threadId, NULL, print, &alienArray.aliens[alienArray.length]);
+    // pthread_join(alienArray.aliens[alienArray.length].threadId, NULL);
+    alienArray.length++;
 
     // Update periods and remaining energies
-    for (int i = 0; i < alienArray->length; i++)
+    for (int i = 0; i < alienArray.length; i++)
     {
-        alienArray->nextDeadline[i] = alienArray->aliens[i].period;
-        alienArray->remainingEnergies[i] = alienArray->aliens[i].energy;
-        alienArray->newPeriods[i] = 0;
+        alienArray.nextDeadline[i] = alienArray.aliens[i].period;
+        alienArray.remainingEnergies[i] = alienArray.aliens[i].energy;
+        alienArray.newPeriods[i] = 0;
     }
 
     return 1;
@@ -191,28 +237,28 @@ int append(struct AlienArray *alienArray, int energy, int period)
 
 /*=========================== DISPLAY ===========================*/
 // This function prints contents of the alien array
-void printAlienArray(struct AlienArray *alienArray)
+void printAlienArray()
 {
     float sum = 0;
-    for (int i = 0; i < alienArray->length; i++)
+    for (int i = 0; i < alienArray.length; i++)
     {
-        if (!alienArray->aliens[i].finished)
+        if (!alienArray.aliens[i].finished)
         {
-            printf("[%d, %d] ", alienArray->aliens[i].energy, alienArray->aliens[i].period);
-            sum += (float)alienArray->aliens[i].energy / (float)alienArray->aliens[i].period;
+            printf("[%d, %d] ", alienArray.aliens[i].energy, alienArray.aliens[i].period);
+            sum += (float)alienArray.aliens[i].energy / (float)alienArray.aliens[i].period;
         }
     }
     printf("\nUtilization: %f\n", sum);
 }
 
 // This function prints the maze
-void printMaze(int maze[DIMENSIONS][DIMENSIONS])
+void printMaze()
 {
     for (int i = 0; i < DIMENSIONS; i++)
     {
         for (int j = 0; j < DIMENSIONS; j++)
         {
-            if (maze[i][j])
+            if (MAZE[i][j])
             {
                 printf("██");
             }
@@ -229,58 +275,33 @@ void printMaze(int maze[DIMENSIONS][DIMENSIONS])
 int main()
 {
     /* Initialize alien array and report */
-    struct AlienArray alienArray;
-    struct Report report;
     initialize(&alienArray, &report);
 
     /* Add processes */
-    append(&alienArray, 2, 6);
-    append(&alienArray, 4, 9);
+    append(2, 6);
+    append(4, 9);
 
     printf("Created array is: ");
-    printAlienArray(&alienArray);
+    printAlienArray();
     printf("\n");
 
-    int maze[DIMENSIONS][DIMENSIONS] =
-        {
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1},
-            {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
-            {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1},
-            {0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
-            {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-            {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1},
-            {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-            {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-            {1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-            {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        };
-
-    printMaze(maze);
+    printMaze();
 
     alienArray.aliens[0].posX = 2;
     alienArray.aliens[1].posX = 1;
 
     printf("Valid move? %d\n",
-           validMove(&alienArray, maze, alienArray.aliens[1].direction, 2, alienArray.aliens[1].posY));
+           validMove(alienArray.aliens[1].direction, 2, alienArray.aliens[1].posY));
 
-    for (size_t i = 0; i < 26; i++)
+    for (int i = 0; i < 26; i++)
     {
         if (i == 9)
         {
-            append(&alienArray, 4, 9);
-            append(&alienArray, 1, 9);
+            append(4, 9);
+            append(1, 9);
         }
-        edf(&alienArray, &report, i);
+        edf(i);
+        sleep(1);
     }
 
     // Print report
