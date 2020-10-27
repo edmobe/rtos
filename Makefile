@@ -1,2 +1,2 @@
-aliens:
-	gcc -o aliens aliens.c -pthread
+main:
+	gcc -o main main.c -pthread
