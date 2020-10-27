@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 
 /*=========================== CONSTANTS ===========================*/
 #define MAX_PROCESSES 5
@@ -67,7 +68,7 @@ void edf(int iteration)
     alienArray.higherPriorityIndex = -1;
     for (int j = 0; j < alienArray.length; j++)
     {
-        if (alienArray.remainingEnergies[j] > 0)
+        if (!alienArray.aliens[j].finished && alienArray.remainingEnergies[j] > 0)
         {
             if (alienArray.higherPriorityDeadline > alienArray.nextDeadline[j] ||
                 (alienArray.higherPriorityDeadline == alienArray.nextDeadline[j] &&
@@ -82,7 +83,7 @@ void edf(int iteration)
     // Add to report
     report.log[iteration] = alienArray.higherPriorityIndex;
     report.iterations++;
-    printf("From %d to %d: Process %d\n", iteration, iteration + 1, alienArray.higherPriorityIndex);
+    printf("[%d - %d]: Process %d.\n", iteration, iteration + 1, alienArray.higherPriorityIndex);
 
     // Spend energy
     pthread_mutex_lock(&mutex);
@@ -93,27 +94,30 @@ void edf(int iteration)
     // Next deadline
     for (int j = 0; j < alienArray.length; j++)
     {
-        if (alienArray.newPeriods[j] == (alienArray.aliens[j].period - 1))
+        if (!alienArray.aliens[j].finished)
         {
-            alienArray.nextDeadline[j] = alienArray.aliens[j].period;
-            alienArray.remainingEnergies[j] = alienArray.aliens[j].energy;
-            alienArray.newPeriods[j] = 0;
-        }
-        else
-        {
-            if (alienArray.nextDeadline[j] > 0)
+            if (alienArray.newPeriods[j] == (alienArray.aliens[j].period - 1))
             {
-                alienArray.nextDeadline[j]--;
+                alienArray.nextDeadline[j] = alienArray.aliens[j].period;
+                alienArray.remainingEnergies[j] = alienArray.aliens[j].energy;
+                alienArray.newPeriods[j] = 0;
             }
             else
             {
-                if (alienArray.remainingEnergies[j] > 0)
+                if (alienArray.nextDeadline[j] > 0)
                 {
-                    printf("Error: Process %d cannot be scheduled\n", j);
-                    return;
+                    alienArray.nextDeadline[j]--;
                 }
+                else
+                {
+                    if (alienArray.remainingEnergies[j] > 0)
+                    {
+                        printf("Error: Process %d cannot be scheduled.\n", j);
+                        return;
+                    }
+                }
+                alienArray.newPeriods[j]++;
             }
-            alienArray.newPeriods[j]++;
         }
     }
 }
@@ -127,35 +131,27 @@ void initialize()
 }
 
 /*=========================== ALIEN METHODS ===========================*/
-void move(int id)
-{
-    printf("Moving alien %d\n", id);
-}
-
 int validMove(int currentDirection, int destinationX, int destinationY)
 {
     if (MAZE[destinationY][destinationX])
     {
         // There is a wall
-        printf("Invalid move: there is a wall.\n");
         return 0;
     }
 
     if (destinationX < 0 || destinationY < 0)
     {
         // Out of bounds
-        printf("Invalid move: out of bounds.\n");
         return 0;
     }
 
-    for (size_t i = 0; i < alienArray.length; i++)
+    for (int i = 0; i < alienArray.length; i++)
     {
         // Collision
         if (alienArray.aliens[i].direction == currentDirection &&
             alienArray.aliens[i].posX == destinationX &&
             alienArray.aliens[i].posY == destinationY)
         {
-            printf("Invalid move: must wait for the alien.\n");
             return 0;
         }
     }
@@ -163,7 +159,182 @@ int validMove(int currentDirection, int destinationX, int destinationY)
     return 1;
 }
 
-void *print(void *arg)
+int moveRight(int id)
+{
+    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX + 1, alienArray.aliens[id].posY))
+    {
+        alienArray.aliens[id].posX++;
+        alienArray.aliens[id].direction = 'r';
+        printf("End position: (%d, %d). Direction: %c.\n", alienArray.aliens[id].posX,
+               alienArray.aliens[id].posY, alienArray.aliens[id].direction);
+        return 1;
+    }
+    return 0;
+}
+
+int moveLeft(int id)
+{
+    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX - 1, alienArray.aliens[id].posY))
+    {
+        alienArray.aliens[id].posX--;
+        alienArray.aliens[id].direction = 'l';
+        printf("End position: (%d, %d). Direction: %c.\n", alienArray.aliens[id].posX,
+               alienArray.aliens[id].posY, alienArray.aliens[id].direction);
+        return 1;
+    }
+    return 0;
+}
+
+int moveUp(int id)
+{
+    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX, alienArray.aliens[id].posY - 1))
+    {
+        alienArray.aliens[id].posY--;
+        alienArray.aliens[id].direction = 'u';
+        printf("End position: (%d, %d). Direction: %c.\n", alienArray.aliens[id].posX,
+               alienArray.aliens[id].posY, alienArray.aliens[id].direction);
+        return 1;
+    }
+    return 0;
+}
+
+int moveDown(int id)
+{
+    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX, alienArray.aliens[id].posY + 1))
+    {
+        alienArray.aliens[id].posY++;
+        alienArray.aliens[id].direction = 'd';
+        printf("End position: (%d, %d). Direction: %c.\n", alienArray.aliens[id].posX,
+               alienArray.aliens[id].posY, alienArray.aliens[id].direction);
+        return 1;
+    }
+    return 0;
+}
+
+int tryDirection(int id, char direction)
+{
+    switch (direction)
+    {
+    case 0:
+        if (moveRight(id))
+        {
+            return 1;
+        }
+        break;
+    case 1:
+        if (moveLeft(id))
+        {
+            return 1;
+        }
+        break;
+    case 2:
+        if (moveUp(id))
+        {
+            return 1;
+        }
+        break;
+    case 3:
+        if (moveDown(id))
+        {
+            return 1;
+        }
+        break;
+    default:
+        printf("Unknown direction!\n");
+        return 0;
+    }
+
+    return 0;
+}
+
+/* Arrange the N elements of ARRAY in random order.
+   Only effective if N is much smaller than RAND_MAX;
+   if this may not be the case, use a better random
+   number generator. */
+void shuffle(int *array, size_t n)
+{
+    if (n > 1)
+    {
+        size_t i;
+        for (i = 0; i < n - 1; i++)
+        {
+            size_t j = i + rand() / (RAND_MAX / (n - i) + 1);
+            int t = array[j];
+            array[j] = array[i];
+            array[i] = t;
+        }
+    }
+}
+
+int move(int id)
+{
+    // If alien has finished
+    if (alienArray.aliens[id].posX == 19 && alienArray.aliens[id].posY == 1)
+    {
+        printf("Alien %d finished successfully!\n", id);
+        alienArray.aliens[id].finished = 1;
+    }
+
+    // Try 4 directions
+    printf("Moving alien %d from (%d, %d). ", id, alienArray.aliens[id].posX, alienArray.aliens[id].posY);
+    int directions[3];
+    switch (alienArray.aliens[id].direction)
+    {
+    case 'r':
+        directions[0] = 1;
+        directions[1] = 2;
+        directions[2] = 3;
+        if (moveRight(id))
+        {
+            return 1;
+        }
+        break;
+    case 'l':
+        directions[0] = 0;
+        directions[1] = 2;
+        directions[2] = 3;
+        if (moveLeft(id))
+        {
+            return 1;
+        }
+        break;
+    case 'u':
+        directions[0] = 0;
+        directions[1] = 1;
+        directions[2] = 3;
+        if (moveUp(id))
+        {
+            return 1;
+        }
+        break;
+    case 'd':
+        directions[0] = 0;
+        directions[1] = 1;
+        directions[2] = 2;
+        if (moveDown(id))
+        {
+            return 1;
+        }
+        break;
+    default:
+        printf("Unknown direction!\n");
+        return 0;
+    }
+
+    shuffle(&directions[0], (int)(sizeof(directions) / sizeof(directions[0])));
+    for (int i = 0; i < 3; i++)
+    {
+        if (tryDirection(id, directions[i]))
+        {
+            return 1;
+        }
+    }
+
+    printf("Cannot move alien %d to any direction!\n", id);
+    return 0;
+}
+
+void *initializeThread(void *arg)
 {
     struct Alien *alien = arg;
     printf("Thread %d initialized.\n", alien->id);
@@ -220,7 +391,7 @@ int append(int energy, int period)
     alienArray.aliens[alienArray.length].finished = 0;
     alienArray.aliens[alienArray.length].posX = 0;
     alienArray.aliens[alienArray.length].posY = 7;
-    pthread_create(&alienArray.aliens[alienArray.length].threadId, NULL, print, &alienArray.aliens[alienArray.length]);
+    pthread_create(&alienArray.aliens[alienArray.length].threadId, NULL, initializeThread, &alienArray.aliens[alienArray.length]);
     // pthread_join(alienArray.aliens[alienArray.length].threadId, NULL);
     alienArray.length++;
 
@@ -274,8 +445,9 @@ void printMaze()
 /*=========================== MAIN ===========================*/
 int main()
 {
-    /* Initialize alien array and report */
-    initialize(&alienArray, &report);
+    /* Initialize alien array, report and random seed */
+    initialize();
+    srand(time(NULL));
 
     /* Add processes */
     append(2, 6);
@@ -286,12 +458,6 @@ int main()
     printf("\n");
 
     printMaze();
-
-    alienArray.aliens[0].posX = 2;
-    alienArray.aliens[1].posX = 1;
-
-    printf("Valid move? %d\n",
-           validMove(alienArray.aliens[1].direction, 2, alienArray.aliens[1].posY));
 
     for (int i = 0; i < 26; i++)
     {
@@ -308,9 +474,9 @@ int main()
     for (int i = 0; i < report.iterations; i++)
     {
         if (report.log[i] == -1)
-            printf("From %d to %d: ?\n", i, i + 1);
+            printf("[%d - %d]: ?\n", i, i + 1);
         else
-            printf("From %d to %d: Process %d\n", i, i + 1, report.log[i]);
+            printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
     }
 
     return 0;
