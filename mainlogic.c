@@ -6,7 +6,7 @@
 
 #include "mainlogic.h"
 
-MAZE =
+static int MAZE[DIMENSIONS][DIMENSIONS] =
     {
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -31,10 +31,10 @@ MAZE =
 };
 
 /*=========================== GLOBAL VARIABLES ===========================*/
-currentThread = -1;
-// static struct AlienArray alienArray;
-// static struct Report report;
-mutex = PTHREAD_MUTEX_INITIALIZER;
+static int currentThread = -1;
+static struct AlienArray alienArray;
+static struct Report report;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*=========================== EDF SCHEDULING ===========================*/
 void edf(int iteration)
@@ -419,41 +419,41 @@ void printMaze()
 }
 
 /*=========================== MAIN ===========================*/
-int main()
-{
-    /* Initialize alien array, report and random seed */
-    initialize();
-    srand(time(NULL));
+// int main()
+// {
+//     /* Initialize alien array, report and random seed */
+//     initialize();
+//     srand(time(NULL));
 
-    /* Add processes */
-    append(2, 6);
-    append(4, 9);
+//     /* Add processes */
+//     append(2, 6);
+//     append(4, 9);
 
-    printf("Created array is: ");
-    printAlienArray();
-    printf("\n");
+//     printf("Created array is: ");
+//     printAlienArray();
+//     printf("\n");
 
-    printMaze();
+//     printMaze();
 
-    for (int i = 0; i < 26; i++)
-    {
-        if (i == 9)
-        {
-            append(4, 9);
-            append(1, 9);
-        }
-        edf(i);
-        sleep(1);
-    }
+//     for (int i = 0; i < 26; i++)
+//     {
+//         if (i == 9)
+//         {
+//             append(4, 9);
+//             append(1, 9);
+//         }
+//         edf(i);
+//         sleep(1);
+//     }
 
-    // Print report
-    for (int i = 0; i < report.iterations; i++)
-    {
-        if (report.log[i] == -1)
-            printf("[%d - %d]: ?\n", i, i + 1);
-        else
-            printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
-    }
+//     // Print report
+//     for (int i = 0; i < report.iterations; i++)
+//     {
+//         if (report.log[i] == -1)
+//             printf("[%d - %d]: ?\n", i, i + 1);
+//         else
+//             printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
