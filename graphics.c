@@ -1,12 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <allegro5/allegro5.h>
-#include <allegro5/allegro_font.h>
-#include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_image.h>
+#include "window.h"
 
-#include "graphics.h"
+void sayhello()
+{
+    printf("Hello!\n");
+}
 
 void must_init(bool test, const char *description)
 {
@@ -24,31 +21,29 @@ int mmx = 0;
 int mmy = 0;
 int mmz = 0;
 int mmw = 0;
-bool in = true;
+// bool in = true;
 float p = 0.0;
 
-static int actual_buttons;
+// static int actual_buttons;
 bool buttons[NUM_BUTTONS] = {false};
 
-typedef struct WBUTTON
-{
-    int x, y;
-    int w, h;
-    bool active;
-    bool pressed;
-    void (*f)();
-    ALLEGRO_COLOR color;
-} WBUTTON;
+// typedef struct WBUTTON
+// {
+//     int x, y;
+//     int w, h;
+//     bool active;
+//     bool pressed;
+//     void (*f)();
+//     ALLEGRO_COLOR color;
+// } WBUTTON;
 
-WBUTTON wbuttons[BUTTONS_MAX];
+// WBUTTON wbuttons[BUTTONS_MAX];
 int bcount = 0;
 
-void mouse_init()
-{
-    actual_buttons = al_get_mouse_num_buttons();
-    if (actual_buttons > NUM_BUTTONS)
-        actual_buttons = NUM_BUTTONS;
-}
+// void mouse_init()
+// {
+
+// }
 
 void button_init(int x, int y, int w, int h, void (*f)(), ALLEGRO_COLOR color)
 {
@@ -98,14 +93,6 @@ void click_update(ALLEGRO_EVENT* event)
                     wbuttons[0].f();
             }
             break;
-
-        case ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY:
-                in = true;
-                break;
-
-            case ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY:
-                in = false;
-                break;
     }
 }
 
