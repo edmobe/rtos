@@ -4,11 +4,7 @@
 #include <unistd.h>
 #include <time.h>
 
-/*=========================== CONSTANTS ===========================*/
-#define MAX_PROCESSES 5
-#define DIMENSIONS 20
-#define MAX_ITERATIONS 1000
-// #define RM_MAX 0.6931471807
+#include "mainlogic.h"
 
 static int MAZE[DIMENSIONS][DIMENSIONS] =
     {
@@ -32,26 +28,6 @@ static int MAZE[DIMENSIONS][DIMENSIONS] =
         {1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-};
-
-/*=========================== STRUCTURES ===========================*/
-struct Alien
-{
-    int id, finished, posX, posY, direction, energy, period;
-    pthread_t threadId;
-};
-
-struct AlienArray
-{
-    struct Alien aliens[MAX_PROCESSES];
-    int nextDeadline[MAX_PROCESSES], remainingEnergies[MAX_PROCESSES], newPeriods[MAX_PROCESSES];
-    int length, higherPriorityDeadline, higherPriorityIndex;
-};
-
-struct Report
-{
-    int iterations;
-    int log[MAX_ITERATIONS]; // [from, to, pid]
 };
 
 /*=========================== GLOBAL VARIABLES ===========================*/
@@ -161,7 +137,7 @@ int validMove(int currentDirection, int destinationX, int destinationY)
 
 int moveRight(int id)
 {
-    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX + 1, alienArray.aliens[id].posY))
+    if (validMove('r', alienArray.aliens[id].posX + 1, alienArray.aliens[id].posY))
     {
         alienArray.aliens[id].posX++;
         alienArray.aliens[id].direction = 'r';
@@ -174,7 +150,7 @@ int moveRight(int id)
 
 int moveLeft(int id)
 {
-    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX - 1, alienArray.aliens[id].posY))
+    if (validMove('l', alienArray.aliens[id].posX - 1, alienArray.aliens[id].posY))
     {
         alienArray.aliens[id].posX--;
         alienArray.aliens[id].direction = 'l';
@@ -187,7 +163,7 @@ int moveLeft(int id)
 
 int moveUp(int id)
 {
-    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX, alienArray.aliens[id].posY - 1))
+    if (validMove('u', alienArray.aliens[id].posX, alienArray.aliens[id].posY - 1))
     {
         alienArray.aliens[id].posY--;
         alienArray.aliens[id].direction = 'u';
@@ -200,7 +176,7 @@ int moveUp(int id)
 
 int moveDown(int id)
 {
-    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX, alienArray.aliens[id].posY + 1))
+    if (validMove('d', alienArray.aliens[id].posX, alienArray.aliens[id].posY + 1))
     {
         alienArray.aliens[id].posY++;
         alienArray.aliens[id].direction = 'd';
@@ -364,7 +340,7 @@ float getUtilization()
 }
 
 // If a new process (alien) can be managed, creates it and appends it to the alien array.
-int append(int energy, int period)
+int append(int energy, int period, int iteration)
 {
     /* Determines if the new process can be scheduled */
     float utilization = getUtilization(alienArray);
@@ -387,6 +363,7 @@ int append(int energy, int period)
     alienArray.aliens[alienArray.length].id = alienArray.length;
     alienArray.aliens[alienArray.length].energy = energy;
     alienArray.aliens[alienArray.length].period = period;
+    alienArray.aliens[alienArray.length].appendedIteration = iteration;
     alienArray.aliens[alienArray.length].direction = 'r';
     alienArray.aliens[alienArray.length].finished = 0;
     alienArray.aliens[alienArray.length].posX = 0;
@@ -443,41 +420,49 @@ void printMaze()
 }
 
 /*=========================== MAIN ===========================*/
-int main()
-{
-    /* Initialize alien array, report and random seed */
-    initialize();
-    srand(time(NULL));
+// int main()
+// {
+//     /* Initialize alien array, report, and random seed */
+//     initialize();
+//     srand(time(NULL));
 
-    /* Add processes */
-    append(2, 6);
-    append(4, 9);
+//     /* Add processes */
+    // append(2, 6, 0);
+    // append(4, 9, 0);
 
-    printf("Created array is: ");
-    printAlienArray();
-    printf("\n");
+//     printf("Created array is: ");
+//     printAlienArray();
+//     printf("\n");
 
-    printMaze();
+//     printMaze();
 
-    for (int i = 0; i < 26; i++)
-    {
-        if (i == 9)
-        {
-            append(4, 9);
-            append(1, 9);
-        }
-        edf(i);
-        sleep(1);
-    }
+//     for (int i = 0; i < 26; i++)
+//     {
+//         if (i == 9)
+//         {
+//             append(4, 9, i);
+//             append(1, 9, i);
+//         }
+//         edf(i);
+//         sleep(1);
+//     }
+    // printf("================== REPORT ==================\n");
 
-    // Print report
-    for (int i = 0; i < report.iterations; i++)
-    {
-        if (report.log[i] == -1)
-            printf("[%d - %d]: ?\n", i, i + 1);
-        else
-            printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
-    }
+    // // Print processes
+    // for (int i = 0; i < alienArray.length; i++)
+    // {
+    //     printf("Process %d initialized in cycle %d\n",
+    //         alienArray.aliens[i].id, alienArray.aliens[i].appendedIteration);
+    // }
 
-    return 0;
-}
+//     // Print report
+//     for (int i = 0; i < report.iterations; i++)
+//     {
+//         if (report.log[i] == -1)
+//             printf("[%d - %d]: ?\n", i, i + 1);
+//         else
+//             printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
+//     }
+
+//     return 0;
+// }
