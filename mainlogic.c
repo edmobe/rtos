@@ -137,7 +137,7 @@ int validMove(int currentDirection, int destinationX, int destinationY)
 
 int moveRight(int id)
 {
-    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX + 1, alienArray.aliens[id].posY))
+    if (validMove('r', alienArray.aliens[id].posX + 1, alienArray.aliens[id].posY))
     {
         alienArray.aliens[id].posX++;
         alienArray.aliens[id].direction = 'r';
@@ -150,7 +150,7 @@ int moveRight(int id)
 
 int moveLeft(int id)
 {
-    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX - 1, alienArray.aliens[id].posY))
+    if (validMove('l', alienArray.aliens[id].posX - 1, alienArray.aliens[id].posY))
     {
         alienArray.aliens[id].posX--;
         alienArray.aliens[id].direction = 'l';
@@ -163,7 +163,7 @@ int moveLeft(int id)
 
 int moveUp(int id)
 {
-    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX, alienArray.aliens[id].posY - 1))
+    if (validMove('u', alienArray.aliens[id].posX, alienArray.aliens[id].posY - 1))
     {
         alienArray.aliens[id].posY--;
         alienArray.aliens[id].direction = 'u';
@@ -176,7 +176,7 @@ int moveUp(int id)
 
 int moveDown(int id)
 {
-    if (validMove(alienArray.aliens[id].direction, alienArray.aliens[id].posX, alienArray.aliens[id].posY + 1))
+    if (validMove('d', alienArray.aliens[id].posX, alienArray.aliens[id].posY + 1))
     {
         alienArray.aliens[id].posY++;
         alienArray.aliens[id].direction = 'd';
@@ -340,7 +340,7 @@ float getUtilization()
 }
 
 // If a new process (alien) can be managed, creates it and appends it to the alien array.
-int append(int energy, int period)
+int append(int energy, int period, int iteration)
 {
     /* Determines if the new process can be scheduled */
     float utilization = getUtilization(alienArray);
@@ -363,6 +363,7 @@ int append(int energy, int period)
     alienArray.aliens[alienArray.length].id = alienArray.length;
     alienArray.aliens[alienArray.length].energy = energy;
     alienArray.aliens[alienArray.length].period = period;
+    alienArray.aliens[alienArray.length].appendedIteration = iteration;
     alienArray.aliens[alienArray.length].direction = 'r';
     alienArray.aliens[alienArray.length].finished = 0;
     alienArray.aliens[alienArray.length].posX = 0;
@@ -421,13 +422,13 @@ void printMaze()
 /*=========================== MAIN ===========================*/
 // int main()
 // {
-//     /* Initialize alien array, report and random seed */
+//     /* Initialize alien array, report, and random seed */
 //     initialize();
 //     srand(time(NULL));
 
 //     /* Add processes */
-//     append(2, 6);
-//     append(4, 9);
+    // append(2, 6, 0);
+    // append(4, 9, 0);
 
 //     printf("Created array is: ");
 //     printAlienArray();
@@ -439,12 +440,20 @@ void printMaze()
 //     {
 //         if (i == 9)
 //         {
-//             append(4, 9);
-//             append(1, 9);
+//             append(4, 9, i);
+//             append(1, 9, i);
 //         }
 //         edf(i);
 //         sleep(1);
 //     }
+    // printf("================== REPORT ==================\n");
+
+    // // Print processes
+    // for (int i = 0; i < alienArray.length; i++)
+    // {
+    //     printf("Process %d initialized in cycle %d\n",
+    //         alienArray.aliens[i].id, alienArray.aliens[i].appendedIteration);
+    // }
 
 //     // Print report
 //     for (int i = 0; i < report.iterations; i++)

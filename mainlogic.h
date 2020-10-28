@@ -11,7 +11,7 @@ static int MAZE[DIMENSIONS][DIMENSIONS];
 /*=========================== STRUCTURES ===========================*/
 struct Alien
 {
-    int id, finished, posX, posY, direction, energy, period;
+    int id, finished, posX, posY, direction, energy, period, appendedIteration;
     pthread_t threadId;
 };
 
