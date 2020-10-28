@@ -4,13 +4,9 @@
 #include <unistd.h>
 #include <time.h>
 
-/*=========================== CONSTANTS ===========================*/
-#define MAX_PROCESSES 5
-#define DIMENSIONS 20
-#define MAX_ITERATIONS 1000
-// #define RM_MAX 0.6931471807
+#include "mainlogic.h"
 
-static int MAZE[DIMENSIONS][DIMENSIONS] =
+MAZE =
     {
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -34,31 +30,11 @@ static int MAZE[DIMENSIONS][DIMENSIONS] =
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 
-/*=========================== STRUCTURES ===========================*/
-struct Alien
-{
-    int id, finished, posX, posY, direction, energy, period;
-    pthread_t threadId;
-};
-
-struct AlienArray
-{
-    struct Alien aliens[MAX_PROCESSES];
-    int nextDeadline[MAX_PROCESSES], remainingEnergies[MAX_PROCESSES], newPeriods[MAX_PROCESSES];
-    int length, higherPriorityDeadline, higherPriorityIndex;
-};
-
-struct Report
-{
-    int iterations;
-    int log[MAX_ITERATIONS]; // [from, to, pid]
-};
-
 /*=========================== GLOBAL VARIABLES ===========================*/
-static int currentThread = -1;
-static struct AlienArray alienArray;
-static struct Report report;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+currentThread = -1;
+// static struct AlienArray alienArray;
+// static struct Report report;
+mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*=========================== EDF SCHEDULING ===========================*/
 void edf(int iteration)
