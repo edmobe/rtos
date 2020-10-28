@@ -65,7 +65,7 @@ void *initializeThread(void *arg);
 float getUtilization();
 
 // If a new process (alien) can be managed, creates it and appends it to the alien array.
-int append(int energy, int period);
+int append(int energy, int period, int iteration);
 
 /*=========================== DISPLAY ===========================*/
 // This function prints contents of the alien array
