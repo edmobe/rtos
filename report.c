@@ -29,28 +29,28 @@ int main (){
     BLOCK mar1;
     mar1.current_number = 0;
     mar1.duration = 1;
-    mar1.period = 3;
+    mar1.period = 6;
     mar1.color = RandomColor();
     strcpy(mar1.id, "A");
     
     BLOCK mar2;
     mar2.current_number = 0;
-    mar2.duration = 10;
-    mar2.period = 1;
+    mar2.duration = 2;
+    mar2.period = 9;
     mar2.color = RandomColor();
     strcpy(mar2.id, "B");
 
     BLOCK mar3;
     mar3.current_number = 0;
-    mar3.duration = 10;
-    mar3.period = 4;
+    mar3.duration = 6;
+    mar3.period = 18;
     mar3.color = RandomColor();
     strcpy(mar3.id, "C");
 
     BLOCK mar4;
     mar4.current_number = 0;
     mar4.duration = 5;
-    mar4.period = 2;
+    mar4.period = 10;
     mar4.color = RandomColor();
     strcpy(mar4.id, "D");
 
@@ -162,12 +162,12 @@ void GenDividers (int min, ALLEGRO_FONT *font) {
     int current = 40, time_current = 0;
     char current_num[10];
 
-    while (current < ANCHO + 500){
+    while (current < ANCHO){
         sprintf(current_num, "%d", time_current);
         al_draw_line(current, 50, current, ALTO - 50, al_map_rgb(255,255,255), 1.0);
         al_draw_text(font, al_map_rgb(255,255,255), current, ALTO - 40, ALLEGRO_ALIGN_CENTER, current_num);
-        current += min;
-        time_current += min / 10;
+        current += min * 30;
+        time_current += min;
     }
 }
 
@@ -183,16 +183,16 @@ void GenAlien (BLOCK marciano, ALLEGRO_FONT *font){
     al_draw_text(font, al_map_rgb(255,255,255), 20, (current_y*2 + 30) / 2 - 5, ALLEGRO_ALIGN_CENTER, marciano.id);
 
     while (current_x < ANCHO) {
-        if (period % marciano.period == 0){
+        if ((period % marciano.period) == 0){
             strcpy(id, marciano.id);
             sprintf(num, "%d", it);
             
-            al_draw_filled_rectangle(current_x + 2, current_y, (current_x + marciano.duration * 10) - 2 , current_y + 30, marciano.color);
-            al_draw_text(font, al_map_rgb(255,255,255), current_x + marciano.duration * 5, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));
+            al_draw_filled_rectangle(current_x + 2, current_y, (current_x + marciano.duration * S1) - 2 , current_y + S1, marciano.color);
+            al_draw_text(font, al_map_rgb(0,0,0), current_x + marciano.duration * S1 / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));
             it ++;
         }
         period ++;
-        current_x += marciano.duration * 10;
+        current_x += WidthDivider * 30;
         
     }
 

@@ -9,8 +9,8 @@
 #include <time.h>
 
 const int ALTO = 600;
-const int ANCHO = 800;
-const int WidthDivider = 50;
+const int ANCHO = 1270;
+const int WidthDivider = 1;
 
 const float DELAY = 0.1;
 const int TIMEDIVIDERS = 100;
@@ -20,7 +20,8 @@ const char *TITLE = "Reporte generado";
 const int SPEED = 10;
 const int FPS = 60;
 
-
+const int S1 = 30;
+const int S2 = 15;
 int current_height = HEIGHTROW;
 
 typedef struct BLOCK {
