@@ -1,4 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <time.h>
 
 /*=========================== CONSTANTS ===========================*/
 #define MAX_PROCESSES 5
@@ -6,7 +10,29 @@
 #define MAX_ITERATIONS 1000
 // #define RM_MAX 0.6931471807
 
-static int MAZE[DIMENSIONS][DIMENSIONS];
+static int MAZE[DIMENSIONS][DIMENSIONS] =
+    {
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
+        {1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
+        {1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+};
 
 /*=========================== STRUCTURES ===========================*/
 struct Alien
@@ -29,17 +55,36 @@ struct Report
 };
 
 /*=========================== GLOBAL VARIABLES ===========================*/
-static int currentThread;
+static int currentThread = -1;
 static struct AlienArray alienArray;
 static struct Report report;
-pthread_mutex_t mutex;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static int finished = 0;
+
+/*=========================== GENERAL SCHEDULING METHODS ===========================*/
+void addSchedulingIterationToReport(int iteration);
+
+void updateHigherPriorityProcess();
 
 /*=========================== EDF SCHEDULING ===========================*/
+void setEdfHigherPriorityProcess();
+
+void setEdfNextProcess();
+
 void edf(int iteration);
 
+/*=========================== RM SCHEDULING ===========================*/
+void setRmHigherPriorityProcess();
+
+void setRmNextProcess();
+
+void rm(int iteration);
+
 /*=========================== INITIALIZING METHODS ===========================*/
-// Initializes an alien array and the final report.
 void initialize();
+
+/*=========================== FINISHING METHODS ===========================*/
+void exitLogic();
 
 /*=========================== ALIEN METHODS ===========================*/
 int validMove(int currentDirection, int destinationX, int destinationY);
@@ -56,20 +101,18 @@ int tryDirection(int id, char direction);
 
 void shuffle(int *array, size_t n);
 
+int allFinished();
+
 int move(int id);
 
 void *initializeThread(void *arg);
 
 /*=========================== ALIEN ARRAY OPERATIONS ===========================*/
-// Calculates the utilization of the processes (aliens)
 float getUtilization();
 
-// If a new process (alien) can be managed, creates it and appends it to the alien array.
 int append(int energy, int period, int iteration);
 
 /*=========================== DISPLAY ===========================*/
-// This function prints contents of the alien array
 void printAlienArray();
 
-// This function prints the maze
 void printMaze();

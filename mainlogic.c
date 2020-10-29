@@ -1,101 +1,127 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#include <time.h>
-
 #include "mainlogic.h"
 
-static int MAZE[DIMENSIONS][DIMENSIONS] =
-    {
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
-        {1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
-        {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1},
-        {1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-        {1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-        {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-        {1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1},
-        {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
-        {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-        {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-        {1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1},
-        {1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1},
-        {1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-};
-
-/*=========================== GLOBAL VARIABLES ===========================*/
-static int currentThread = -1;
-static struct AlienArray alienArray;
-static struct Report report;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-/*=========================== EDF SCHEDULING ===========================*/
-void edf(int iteration)
+/*=========================== GENERAL SCHEDULING METHODS ===========================*/
+void addSchedulingIterationToReport(int iteration)
 {
-    // Get the higher priority alien
-    alienArray.higherPriorityDeadline = __INT_MAX__;
-    alienArray.higherPriorityIndex = -1;
-    for (int j = 0; j < alienArray.length; j++)
-    {
-        if (!alienArray.aliens[j].finished && alienArray.remainingEnergies[j] > 0)
-        {
-            if (alienArray.higherPriorityDeadline > alienArray.nextDeadline[j] ||
-                (alienArray.higherPriorityDeadline == alienArray.nextDeadline[j] &&
-                 alienArray.remainingEnergies[alienArray.higherPriorityIndex] > alienArray.remainingEnergies[j]))
-            {
-                alienArray.higherPriorityDeadline = alienArray.nextDeadline[j];
-                alienArray.higherPriorityIndex = j;
-            }
-        }
-    }
-
-    // Add to report
     report.log[iteration] = alienArray.higherPriorityIndex;
     report.iterations++;
     printf("[%d - %d]: Process %d.\n", iteration, iteration + 1, alienArray.higherPriorityIndex);
+}
 
-    // Spend energy
+void updateHigherPriorityProcess()
+{
     pthread_mutex_lock(&mutex);
     currentThread = alienArray.higherPriorityIndex;
     pthread_mutex_unlock(&mutex);
     alienArray.remainingEnergies[alienArray.higherPriorityIndex]--;
+}
 
-    // Next deadline
-    for (int j = 0; j < alienArray.length; j++)
+/*=========================== EDF SCHEDULING ===========================*/
+void setEdfHigherPriorityProcess()
+{
+    alienArray.higherPriorityDeadline = __INT_MAX__;
+    alienArray.higherPriorityIndex = -1;
+    for (int i = 0; i < alienArray.length; i++)
     {
-        if (!alienArray.aliens[j].finished)
+        if (!alienArray.aliens[i].finished && alienArray.remainingEnergies[i] > 0)
         {
-            if (alienArray.newPeriods[j] == (alienArray.aliens[j].period - 1))
+            if (alienArray.higherPriorityDeadline > alienArray.nextDeadline[i] ||
+                (alienArray.higherPriorityDeadline == alienArray.nextDeadline[i] &&
+                 alienArray.remainingEnergies[alienArray.higherPriorityIndex] > alienArray.remainingEnergies[i]))
             {
-                alienArray.nextDeadline[j] = alienArray.aliens[j].period;
-                alienArray.remainingEnergies[j] = alienArray.aliens[j].energy;
-                alienArray.newPeriods[j] = 0;
-            }
-            else
-            {
-                if (alienArray.nextDeadline[j] > 0)
-                {
-                    alienArray.nextDeadline[j]--;
-                }
-                else
-                {
-                    if (alienArray.remainingEnergies[j] > 0)
-                    {
-                        printf("Error: Process %d cannot be scheduled.\n", j);
-                        return;
-                    }
-                }
-                alienArray.newPeriods[j]++;
+                alienArray.higherPriorityDeadline = alienArray.nextDeadline[i];
+                alienArray.higherPriorityIndex = i;
             }
         }
     }
+}
+
+void setEdfNextProcess()
+{
+    for (int i = 0; i < alienArray.length; i++)
+    {
+        if (!alienArray.aliens[i].finished)
+        {
+            if (alienArray.newPeriods[i] == (alienArray.aliens[i].period - 1))
+            {
+                alienArray.nextDeadline[i] = alienArray.aliens[i].period;
+                alienArray.remainingEnergies[i] = alienArray.aliens[i].energy;
+                alienArray.newPeriods[i] = 0;
+            }
+            else
+            {
+                if (alienArray.nextDeadline[i] > 0)
+                {
+                    alienArray.nextDeadline[i]--;
+                }
+                else
+                {
+                    if (alienArray.remainingEnergies[i] > 0)
+                    {
+                        printf("Error: Process %d cannot be scheduled.\n", i);
+                        return;
+                    }
+                }
+                alienArray.newPeriods[i]++;
+            }
+        }
+    }
+}
+
+void edf(int iteration)
+{
+    setEdfHigherPriorityProcess();
+
+    addSchedulingIterationToReport(iteration);
+
+    updateHigherPriorityProcess();
+
+    setEdfNextProcess();
+}
+
+/*=========================== RM SCHEDULING ===========================*/
+void setRmHigherPriorityProcess()
+{
+    alienArray.higherPriorityDeadline = __INT_MAX__;
+    alienArray.higherPriorityIndex = -1;
+    for (int i = 0; i < alienArray.length; i++)
+    {
+        if (!alienArray.aliens[i].finished && alienArray.remainingEnergies[i] > 0)
+        {
+            if (alienArray.higherPriorityDeadline > alienArray.nextDeadline[i])
+            {
+                alienArray.higherPriorityDeadline = alienArray.nextDeadline[i];
+                alienArray.higherPriorityIndex = i;
+            }
+        }
+    }
+}
+
+void setRmNextProcess()
+{
+    for (int i = 0; i < alienArray.length; i++)
+    {
+        if (!alienArray.aliens[i].finished)
+        {
+            alienArray.nextDeadline[i]--;
+            if (alienArray.nextDeadline[i] == 0)
+            {
+                alienArray.nextDeadline[i] = alienArray.aliens[i].period;
+                alienArray.remainingEnergies[i] = alienArray.aliens[i].energy;
+            }
+        }
+    }
+}
+
+void rm(int iteration)
+{
+    setRmHigherPriorityProcess();
+
+    addSchedulingIterationToReport(iteration);
+
+    updateHigherPriorityProcess();
+
+    setRmNextProcess();
 }
 
 /*=========================== INITIALIZING METHODS ===========================*/
@@ -104,6 +130,13 @@ void initialize()
 {
     alienArray.length = 0;
     report.iterations = 0;
+}
+
+/*=========================== FINISHING METHODS ===========================*/
+void exitLogic()
+{
+    finished = 1;
+    printf("Here goes the exit logic.\n");
 }
 
 /*=========================== ALIEN METHODS ===========================*/
@@ -242,6 +275,18 @@ void shuffle(int *array, size_t n)
     }
 }
 
+int allFinished()
+{
+    for (int i = 0; i < alienArray.length; i++)
+    {
+        if (!alienArray.aliens[i].finished)
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int move(int id)
 {
     // If alien has finished
@@ -249,6 +294,14 @@ int move(int id)
     {
         printf("Alien %d finished successfully!\n", id);
         alienArray.aliens[id].finished = 1;
+        alienArray.aliens[id].posX = -1;
+        alienArray.aliens[id].posY = -1;
+        if (allFinished())
+        {
+            exitLogic();
+        }
+
+        return 1;
     }
 
     // Try 4 directions
@@ -418,51 +471,3 @@ void printMaze()
         printf("\n");
     }
 }
-
-/*=========================== MAIN ===========================*/
-// int main()
-// {
-//     /* Initialize alien array, report, and random seed */
-//     initialize();
-//     srand(time(NULL));
-
-//     /* Add processes */
-    // append(2, 6, 0);
-    // append(4, 9, 0);
-
-//     printf("Created array is: ");
-//     printAlienArray();
-//     printf("\n");
-
-//     printMaze();
-
-//     for (int i = 0; i < 26; i++)
-//     {
-//         if (i == 9)
-//         {
-//             append(4, 9, i);
-//             append(1, 9, i);
-//         }
-//         edf(i);
-//         sleep(1);
-//     }
-    // printf("================== REPORT ==================\n");
-
-    // // Print processes
-    // for (int i = 0; i < alienArray.length; i++)
-    // {
-    //     printf("Process %d initialized in cycle %d\n",
-    //         alienArray.aliens[i].id, alienArray.aliens[i].appendedIteration);
-    // }
-
-//     // Print report
-//     for (int i = 0; i < report.iterations; i++)
-//     {
-//         if (report.log[i] == -1)
-//             printf("[%d - %d]: ?\n", i, i + 1);
-//         else
-//             printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
-//     }
-
-//     return 0;
-// }

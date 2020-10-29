@@ -8,14 +8,17 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_native_dialog.h>
 
+#include "mainlogic.h"
+
 enum {
     MANUAL = 1,
     AUTO
 };
 
-static int mode;
-static bool done;
-static bool redraw;
+int mode;
+bool done;
+bool redraw;
+bool running;
 
 void must_init(bool test, const char *description);
 
@@ -27,11 +30,26 @@ void must_init(bool test, const char *description);
 #define DISP_W 1280//(BUFFER_W * DISP_SCALE)
 #define DISP_H 720//(BUFFER_H * DISP_SCALE)
 
+ALLEGRO_DISPLAY* disp;
+
+void disp_init();
+
+void disp_deinit();
+
+/*======================== KEYBOARD ==========================*/
+#define KEY_SEEN     1
+#define KEY_RELEASED 2
+unsigned char key[ALLEGRO_KEY_MAX];
+
+void keyboard_init();
+
+void keyboard_update(ALLEGRO_EVENT* event);
+
 /*========================== MOUSE ===========================*/
 #define NUM_BUTTONS 5 // in a mouse
-#define BUTTONS_MAX 4 // buttons widgets in GUI
+#define BUTTONS_MAX 8 // buttons widgets in GUI
 
-static int actual_buttons;
+int actual_buttons;
 // bool buttons[NUM_BUTTONS] = {false};
 
 /*========================= BUTTONS ==========================*/
@@ -48,13 +66,10 @@ typedef struct WBUTTON
 
 WBUTTON wbuttons[BUTTONS_MAX];
 WBUTTON combobox[2];
-// int bcount = 0;
 
 // void mouse_init();
 
 void button_init(int x, int y, int w, int h, void (*f)(), char *text, ALLEGRO_COLOR color);
-
-void click_update(ALLEGRO_EVENT* event);
 
 void button_draw(ALLEGRO_FONT *font);
 
@@ -66,3 +81,27 @@ void set_mode();
 void combo_init(int x, int y, int w, int h);
 
 void combo_draw(ALLEGRO_FONT* font);
+
+/*========================== CLICK ===========================*/
+void click_update(ALLEGRO_EVENT* event);
+
+void ambientmode();
+
+/*======================== TEXT AREA =========================*/
+void textarea_init();
+
+void textarea_draw(ALLEGRO_FONT* font);
+
+/*======================= DATA INPUT =========================*/
+int energy;
+int period;
+
+void datainput_init(ALLEGRO_FONT* font);
+
+void datainput_update();
+
+void datainput_draw(ALLEGRO_FONT* font);
+
+void add_alien();
+
+void startlogic();
