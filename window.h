@@ -16,10 +16,15 @@ enum {
     AUTO
 };
 
+#define RM 10
+#define EDF 11
+
 int mode;
+int algorithm;
 bool done;
 bool redraw;
 bool running;
+long frames;
 
 void must_init(bool test, const char *description);
 
@@ -106,7 +111,7 @@ void combo_draw(ALLEGRO_FONT* font);
 /*========================== CLICK ===========================*/
 void click_update(ALLEGRO_EVENT* event);
 
-void ambientmode();
+void mode_update();
 
 /*======================== TEXT AREA =========================*/
 void textarea_init();
@@ -127,6 +132,8 @@ void add_alien();
 
 /*========================= RUNNING ==========================*/
 void startlogic();
+
+void start_update();
 
 /*=========================== MAZE ===========================*/
 

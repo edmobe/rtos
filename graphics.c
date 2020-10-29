@@ -77,6 +77,15 @@ void keyboard_update(ALLEGRO_EVENT* event)
         case ALLEGRO_EVENT_KEY_UP:
             key[event->keyboard.keycode] &= KEY_RELEASED;
             break;
+        case ALLEGRO_EVENT_KEY_CHAR:
+            if (event->keyboard.keycode == ALLEGRO_KEY_C)
+            {
+                if (algorithm == EDF)
+                    algorithm = RM;
+                else
+                    algorithm = EDF;
+            }
+            break;
     }
 }
 
@@ -128,7 +137,7 @@ void button_draw(ALLEGRO_FONT* font)
 
 /*========================== MODE ============================*/
 
-void ambientmode()
+void mode_update()
 {
     if(key[ALLEGRO_KEY_X])
     {
@@ -378,6 +387,14 @@ void startlogic()
     wbuttons[0].text = "Running";
     combobox[0].active = false;
     combobox[1].active = false;
+}
+
+void start_uptdate()
+{
+    if (frames >= 60) {
+        frames = 0;
+        printf("0.5 has passed\n");
+    }
 }
 
 /*=========================== MAZE ===========================*/

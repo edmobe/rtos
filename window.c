@@ -106,6 +106,7 @@ int main()
     done = false;
     redraw = true;
     mode = AUTO;
+    algorithm = EDF;
     ALLEGRO_EVENT event;
     
     al_start_timer(timer);
@@ -117,13 +118,15 @@ int main()
         switch(event.type)
         {
             case ALLEGRO_EVENT_TIMER:
-                ambientmode();
+                mode_update();
                 datainput_update();
+                maze_update();
 
                 if(key[ALLEGRO_KEY_ESCAPE])
                     done = true;
 
                 redraw = true;
+                frames++;
                 break;
 
             case ALLEGRO_EVENT_DISPLAY_CLOSE:
@@ -163,7 +166,10 @@ int main()
             maze_draw();
             // Energy inidicator
             al_draw_text(secondfont, al_map_rgb(60, 200, 50), 
-                DISP_W-(DISP_W-DISP_H)/2 + 10, DISP_H/24, 0, "Energy Level:");
+                DISP_W-(DISP_W-DISP_H)/2+10, DISP_H/24, 0, "Energy Level:");
+            // Selected algorithm
+            al_draw_textf(secondfont, al_map_rgb(255, 234, 0), 
+                DISP_W-(DISP_W-DISP_H)/2+10, DISP_H/2-DISP_H/8, 0, "Algorithm: %s", algorithm == RM ? "RM":"RF");
             // Moving alien
             al_draw_rectangle(DISP_W-(DISP_W-DISP_H)/2+10,DISP_H/2-15,DISP_W-15, DISP_H-10, al_map_rgb(255,255,255), 3);
             al_draw_text(secondfont, al_map_rgb(2, 255, 188), 
