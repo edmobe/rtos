@@ -26,7 +26,7 @@ int main (){
     // Aliens
     // --------
 
-    BLOCK mar1;
+    /* BLOCK mar1;
     mar1.current_number = 0;
     mar1.duration = 1;
     mar1.period = 6;
@@ -56,7 +56,7 @@ int main (){
 
     BLOCK aliens[4] = {mar1, mar2, mar3, mar4};
 
-    int order[10] = {0,1,0,1,1,-1,2,2,2,3};
+    int order[10] = {0,1,0,1,1,-1,2,2,2,3}; */
     // ------------------
     // Allegro elements
     // ------------------
@@ -82,18 +82,20 @@ int main (){
 
     char *sWindowTitle = "Reporte";
     al_set_window_title(pDisplay, sWindowTitle);  
-    al_set_window_position(pDisplay, 300, 50);
+    al_set_window_position(pDisplay, 50, 30);
 
     bool done = false;
 
+    GenDividers(WidthDivider, font);
 
     // -----------------
     // Generate Blocks
     // -----------------
-
-    GenDividers(WidthDivider, font);
+    /*
+    
     GenAlien(aliens, font);
     GenAlgoReport(order, aliens, font, "EDF");
+    */
     al_draw_text(font_big, al_map_rgb(255,255,255), ANCHO / 2, 10, ALLEGRO_ALIGN_CENTER, TITLE);
     al_draw_text(font_small, al_map_rgb(255,255,255), 20, 30, ALLEGRO_ALIGN_CENTER, "Procesos");
 

@@ -574,6 +574,7 @@ int main()
     {
         printf("Process %d initialized in cycle %d\n",
                alienArray.aliens[i].id, alienArray.aliens[i].appendedIteration);
+               
     }
 
     // Print report
