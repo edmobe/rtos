@@ -15,7 +15,7 @@ int main (){
     al_init_ttf_addon();
 
 
-    srand(getpid());
+    srand(time(NULL));
 
     // -----------
     // Variables
@@ -28,28 +28,28 @@ int main (){
 
     BLOCK mar1;
     mar1.current_number = 0;
-    mar1.duration = 30;
-    mar1.period = 2;
+    mar1.duration = 1;
+    mar1.period = 3;
     mar1.color = RandomColor();
     strcpy(mar1.id, "A");
     
     BLOCK mar2;
     mar2.current_number = 0;
-    mar2.duration = 60;
-    mar2.period = 3;
+    mar2.duration = 10;
+    mar2.period = 1;
     mar2.color = RandomColor();
     strcpy(mar2.id, "B");
 
     BLOCK mar3;
     mar3.current_number = 0;
-    mar3.duration = 120;
-    mar3.period = 3;
+    mar3.duration = 10;
+    mar3.period = 4;
     mar3.color = RandomColor();
     strcpy(mar3.id, "C");
 
     BLOCK mar4;
     mar4.current_number = 0;
-    mar4.duration = 45;
+    mar4.duration = 5;
     mar4.period = 2;
     mar4.color = RandomColor();
     strcpy(mar4.id, "D");
@@ -88,12 +88,12 @@ int main (){
     // Generate Blocks
     // -----------------
 
-    GenDividers(mar1.duration, font);
+    GenDividers(WidthDivider, font);
     GenAlien(mar1, font);
     GenAlien(mar2, font);
     GenAlien(mar3, font);
     GenAlien(mar4, font);
-    
+
     al_draw_text(font_big, al_map_rgb(255,255,255), ANCHO / 2, 10, ALLEGRO_ALIGN_CENTER, TITLE);
     al_draw_text(font_small, al_map_rgb(255,255,255), 20, 30, ALLEGRO_ALIGN_CENTER, "Procesos");
 
@@ -165,9 +165,9 @@ void GenDividers (int min, ALLEGRO_FONT *font) {
     while (current < ANCHO + 500){
         sprintf(current_num, "%d", time_current);
         al_draw_line(current, 50, current, ALTO - 50, al_map_rgb(255,255,255), 1.0);
-        al_draw_text(font, al_map_rgb(255,255,255), current - 3, ALTO - 40, ALLEGRO_ALIGN_CENTER, current_num);
+        al_draw_text(font, al_map_rgb(255,255,255), current, ALTO - 40, ALLEGRO_ALIGN_CENTER, current_num);
         current += min;
-        time_current += min;
+        time_current += min / 10;
     }
 }
 
@@ -187,12 +187,12 @@ void GenAlien (BLOCK marciano, ALLEGRO_FONT *font){
             strcpy(id, marciano.id);
             sprintf(num, "%d", it);
             
-            al_draw_filled_rectangle(current_x + 2, current_y, current_x + marciano.duration - 2, current_y + 30, marciano.color);
-            al_draw_text(font, al_map_rgb(0,0,0), current_x + marciano.duration / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));
+            al_draw_filled_rectangle(current_x + 2, current_y, (current_x + marciano.duration * 10) - 2 , current_y + 30, marciano.color);
+            al_draw_text(font, al_map_rgb(255,255,255), current_x + marciano.duration * 5, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));
             it ++;
         }
         period ++;
-        current_x += marciano.duration;
+        current_x += marciano.duration * 10;
         
     }
 

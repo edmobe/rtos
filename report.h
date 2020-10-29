@@ -6,11 +6,11 @@
 #include <allegro5/allegro_image.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <time.h>
 
 const int ALTO = 600;
 const int ANCHO = 800;
-
+const int WidthDivider = 50;
 
 const float DELAY = 0.1;
 const int TIMEDIVIDERS = 100;
@@ -19,6 +19,7 @@ const char *FONTNAME = "_decterm.ttf";
 const char *TITLE = "Reporte generado";
 const int SPEED = 10;
 const int FPS = 60;
+
 
 int current_height = HEIGHTROW;
 
