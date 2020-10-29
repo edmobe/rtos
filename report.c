@@ -116,7 +116,7 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
     
 
     al_flip_display();
-    al_rest(0.03);
+    al_rest(0.1);
     // -------
     // Bucle
     // -------
@@ -171,7 +171,7 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
 
         
         al_flip_display();
-        al_rest(0.03);
+        al_rest(0.01);
         
     }    
     al_destroy_event_queue(oQueue);

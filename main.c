@@ -546,6 +546,7 @@ int main()
     append(1, 6, 0);
     append(2, 9, 0);
     append(6, 18, 0);
+    append(1, 6, 0);
 
     /* Modify positions to test exit */
     /*
@@ -562,7 +563,7 @@ int main()
     printMaze();
 
     int iterationCounter = 0;
-    while (!finished && iterationCounter != 100)
+    while (!finished && iterationCounter != 30)
     {
         rm(iterationCounter);
         usleep(50000);
