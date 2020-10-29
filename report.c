@@ -1,12 +1,12 @@
 #include "report.h"
 
-void GenDividers (int min, ALLEGRO_FONT *font);
-void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength);
+void GenDividers (int min, ALLEGRO_FONT *font, int reportIteration);
+void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength, int reportIteration);
 void GenAlgoReport (int *order, BLOCK *marciano, ALLEGRO_FONT *font, char *text, int reportIterations);
 void Report ();
 ALLEGRO_COLOR RandomColor ();
 
-void CameraUpdate (float *cameraPosition, float x, float y, int width, int height);
+void CameraUpdate (float *cameraPosition, float x, float y, int width, int height, int reportIteration);
 
 void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char *method){
 
@@ -20,7 +20,8 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
     al_init_primitives_addon();
     al_init_font_addon();
     al_init_ttf_addon();
-
+    al_init_image_addon();
+    
 
     srand(time(NULL));
 
@@ -28,7 +29,7 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
     // Variables
     // -----------
     float cameraPosition[2] = { 0, 0};
-    float x = 0, y = 0;
+    float x = 500, y = 0;
     // --------
     // Aliens
     // --------
@@ -74,11 +75,13 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
     ALLEGRO_FONT* font_small = al_load_font(FONTNAME, 10, 0);
     ALLEGRO_FONT* font = al_load_font(FONTNAME, 15, 0);
     ALLEGRO_FONT* font_big = al_load_font(FONTNAME, 30, 0);
-    
+    ALLEGRO_TRANSFORM camera;
+    ALLEGRO_BITMAP* background = al_load_bitmap("palm-tree.png");
     
     // --------
     // Events
     // --------
+    
 
     oQueue = al_create_event_queue();
     al_register_event_source(oQueue, al_get_keyboard_event_source());
@@ -94,24 +97,30 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
 
     bool done = false;
 
-    GenDividers(WidthDivider, font);
+    
 
     // -----------------
     // Generate Blocks
     // -----------------
     
+    for (int i = 0; i < alienLength; i++){
+        aliens[i].color = RandomColor();
+    }
     
-    GenAlien(aliens, font, alienLength);
+    GenDividers(WidthDivider, font, reportIterations); 
+    GenAlien(aliens, font, alienLength, reportIterations);
     GenAlgoReport(log, aliens, font, method, reportIterations);
-    
     al_draw_text(font_big, al_map_rgb(255,255,255), WIDTH / 2, 10, ALLEGRO_ALIGN_CENTER, TITLE);
     al_draw_text(font_small, al_map_rgb(255,255,255), 20, 30, ALLEGRO_ALIGN_CENTER, "Procesos");
+    
+    
 
+    al_flip_display();
+    al_rest(0.03);
     // -------
     // Bucle
     // -------
-    al_flip_display();
-    al_rest(0.03);
+    
     while(!done) {
 
         ALLEGRO_EVENT oEvent;
@@ -119,18 +128,50 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
         // -----------------
         //  Events waiting
         // -----------------
-
+        
         al_wait_for_event(oQueue, &oEvent);
-
         switch(oEvent.keyboard.keycode) {
 
         case ALLEGRO_KEY_X:
             done = true;
         break;
 
+        case ALLEGRO_KEY_RIGHT:
+            x +=  SPEED;
+        break;
+
+        case ALLEGRO_KEY_LEFT:
+            x -=  SPEED;
+        break;
+
+        case ALLEGRO_KEY_DOWN:
+            y +=  SPEED;
+        break;
+
+        case ALLEGRO_KEY_UP:
+            y -=  SPEED;
+        break;
+
         default:
         break;      
         }
+        CameraUpdate(cameraPosition, x,y, x + 10, y +10, reportIterations);
+        
+        al_identity_transform(&camera);
+        al_translate_transform(&camera, -cameraPosition[0], -cameraPosition[1]);
+        al_use_transform(&camera);
+        
+        al_clear_to_color(al_map_rgb(0,0,0));
+        
+        GenDividers(WidthDivider, font, reportIterations); 
+        GenAlien(aliens, font, alienLength, reportIterations);
+        GenAlgoReport(log, aliens, font, method, reportIterations);
+        al_draw_text(font_big, al_map_rgb(255,255,255), WIDTH / 2, 10, ALLEGRO_ALIGN_CENTER, TITLE);
+        al_draw_text(font_small, al_map_rgb(255,255,255), 20, 30, ALLEGRO_ALIGN_CENTER, "Procesos");
+
+        
+        al_flip_display();
+        al_rest(0.03);
         
     }    
     al_destroy_event_queue(oQueue);
@@ -144,11 +185,11 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
 // Dividers generation
 // ---------------------
 
-void GenDividers (int min, ALLEGRO_FONT *font) {
+void GenDividers (int min, ALLEGRO_FONT *font, int reportIteration) {
     int current = 40, time_current = 0;
     char current_num[10];
 
-    while (current < WIDTH){
+    while (current < S1*2 + S1 * reportIteration){
         sprintf(current_num, "%d", time_current);
         al_draw_line(current, 50, current, HEIGHT - 50, al_map_rgb(255,255,255), 1.0);
         al_draw_text(font, al_map_rgb(255,255,255), current, HEIGHT - 40, ALLEGRO_ALIGN_CENTER, current_num);
@@ -161,15 +202,14 @@ void GenDividers (int min, ALLEGRO_FONT *font) {
 // Generate alien block
 // ----------------------
 
-void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength){
+void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength, int reportIteration){
     for (int i = 0; i < alienLength; i++){
-        printf("%s. %d %d\n", marciano[i].id, marciano[i].duration, marciano[i].period);
         int current_x = 40, current_y = current_height;
         int period = 0, it = 0;
         char num[10], id[2];
         al_draw_text(font, al_map_rgb(255,255,255), 20, (current_y*2 + 30) / 2 - 5, ALLEGRO_ALIGN_CENTER, marciano[i].id);
-        marciano[i].color = RandomColor();
-        while (current_x < WIDTH) {
+        
+        while (current_x <  S1*2 + S1 * reportIteration) {
             if ((period % marciano[i].period) == 0){
                 strcpy(id, marciano[i].id);
                 sprintf(num, "%d", it);
@@ -223,6 +263,7 @@ void GenAlgoReport (int *order, BLOCK *marciano, ALLEGRO_FONT *font, char *text,
         current_x += S1 / WidthDivider;
     }
     al_draw_line(current_x, 50, current_x, HEIGHT - 50, al_map_rgb(255,0,0), 1.0);
+    current_height = HEIGHTROW;
 }
 
 // -----------------------
@@ -237,12 +278,17 @@ ALLEGRO_COLOR RandomColor () {
 // Camera moves
 // --------------
 
-void CameraUpdate (float *cameraPosition, float x, float y, int width, int height){
+void CameraUpdate (float *cameraPosition, float x, float y, int width, int height, int reportIteration){
     cameraPosition[0] = - (WIDTH / 2) + (x + width / 2);
     cameraPosition[1] = - (HEIGHT / 2) + (y + height / 2);
-
     if (cameraPosition[0] < 0)
         cameraPosition[0] = 0;
     if (cameraPosition[1] < 0)
         cameraPosition[1] = 0;
+    if (cameraPosition[0] > abs(WIDTH - (S1*2 + S1 * reportIteration))){
+        cameraPosition[0] = abs(WIDTH - (S1*2 + S1 * reportIteration));
+    }
+    
+
+    printf("%f, %f \n", cameraPosition[0], cameraPosition[1]);
 }
