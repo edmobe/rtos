@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
+#include "report.h"
+#include "report.c"
 
 /*=========================== CONSTANTS ===========================*/
 #define MAX_PROCESSES 5
@@ -544,6 +546,7 @@ int main()
     append(1, 6, 0);
     append(2, 9, 0);
     append(6, 18, 0);
+    append(1, 6, 0);
 
     /* Modify positions to test exit */
     /*
@@ -560,22 +563,33 @@ int main()
     printMaze();
 
     int iterationCounter = 0;
-    while (!finished)
+    while (!finished && iterationCounter != 100)
     {
-        rm(iterationCounter);
-        sleep(1);
+        edf(iterationCounter);
+        usleep(50000);
         iterationCounter++;
     }
 
     printf("================== REPORT ==================\n");
-
+    BLOCK AliensReport[alienArray.length];
+    char currentLetter = 'A', LetterStr[1];
     // Print processes
     for (int i = 0; i < alienArray.length; i++)
     {
         printf("Process %d initialized in cycle %d\n",
                alienArray.aliens[i].id, alienArray.aliens[i].appendedIteration);
-    }
 
+        BLOCK alien;
+        alien.current_number = 0;
+        alien.duration = alienArray.aliens[i].energy;
+        alien.period = alienArray.aliens[i].period;
+        LetterStr[0] = currentLetter;
+        strcpy(alien.id, LetterStr);
+        
+        AliensReport[i] = alien;
+        currentLetter ++;
+    }
+    Report(AliensReport, report.log, alienArray.length, report.iterations, "RM");
     // Print report
     for (int i = 0; i < report.iterations; i++)
     {
