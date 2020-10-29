@@ -36,8 +36,9 @@ typedef struct BLOCK {
 
 
 void GenDividers (int min, ALLEGRO_FONT *font);
-void GenAlien ();
+void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font);
 void GenReport ();
+void GenAlgoReport (int *order, BLOCK *aliens, ALLEGRO_FONT *font, char *text);
 ALLEGRO_COLOR RandomColor ();
 
 void CameraUpdate (float *cameraPosition, float x, float y, int width, int height);
