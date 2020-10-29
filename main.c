@@ -562,7 +562,7 @@ int main()
     printMaze();
 
     int iterationCounter = 0;
-    while (!finished && iterationCounter != 40)
+    while (!finished && iterationCounter != 31)
     {
         rm(iterationCounter);
         usleep(50000);
@@ -591,7 +591,7 @@ int main()
         
         printf("%s\n ", LetterStr);
     }
-    Report(AliensReport, report.log, alienArray.length, report.iterations);
+    Report(AliensReport, report.log, alienArray.length, report.iterations, "RM");
     // Print report
     for (int i = 0; i < report.iterations; i++)
     {

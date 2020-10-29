@@ -8,7 +8,7 @@ ALLEGRO_COLOR RandomColor ();
 
 void CameraUpdate (float *cameraPosition, float x, float y, int width, int height);
 
-void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations){
+void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char *method){
 
     // ----------------
     // Initialization
@@ -102,7 +102,7 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations){
     
     
     GenAlien(aliens, font, alienLength);
-    GenAlgoReport(log, aliens, font, "EDF", reportIterations);
+    GenAlgoReport(log, aliens, font, method, reportIterations);
     
     al_draw_text(font_big, al_map_rgb(255,255,255), WIDTH / 2, 10, ALLEGRO_ALIGN_CENTER, TITLE);
     al_draw_text(font_small, al_map_rgb(255,255,255), 20, 30, ALLEGRO_ALIGN_CENTER, "Procesos");
@@ -192,6 +192,7 @@ void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength){
         current_height += 40;
     }
     
+    
     // Position (y1 + y2 / 2) - 5
     
 }
@@ -221,6 +222,7 @@ void GenAlgoReport (int *order, BLOCK *marciano, ALLEGRO_FONT *font, char *text,
         
         current_x += S1 / WidthDivider;
     }
+    al_draw_line(current_x, 50, current_x, HEIGHT - 50, al_map_rgb(255,0,0), 1.0);
 }
 
 // -----------------------
