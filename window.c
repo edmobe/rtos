@@ -60,6 +60,7 @@ int main()
     must_init(al_init_font_addon(), "font");
     must_init(al_init_ttf_addon(), "ttfont");
     // al_init_native_dialog_addon()
+    must_init(al_init_image_addon(), "image");
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     must_init(timer, "timer");
@@ -74,6 +75,9 @@ int main()
 
     ALLEGRO_FONT* titlefont = al_load_ttf_font("fonts/_decterm.ttf", 36, 0);
     must_init(titlefont, "title font");
+
+    ALLEGRO_FONT* secondfont = al_load_ttf_font("fonts/_decterm.ttf", 22, 0);
+    must_init(secondfont, "second font");
 
     must_init(al_init_primitives_addon(), "primitives");
 
@@ -91,10 +95,11 @@ int main()
     button_init((DISP_W-DISP_H)/6,(DISP_H/24)*5+10,(DISP_W-DISP_H)/6, (DISP_H/16), 
         startlogic, "Start", al_map_rgb(0, 255, 0));
     button_init((DISP_W-DISP_H)/6,(DISP_H/24)*22+10,(DISP_W-DISP_H)/6,(DISP_H/16), 
-        sayhello, "Add", al_map_rgb(255, 255, 255));
+        add_alien, "Add", al_map_rgb(255, 255, 255));
     combo_init(3,(DISP_H/24)*3+10,(DISP_W-DISP_H)/2-10,(DISP_H/24));
     keyboard_init();
     textarea_init();
+    sprites_init();
     datainput_init(font);
 
     int i;
@@ -154,6 +159,19 @@ int main()
             textarea_draw(font);
             // Data input
             datainput_draw(font);
+            // Maze
+            maze_draw();
+            // Energy inidicator
+            al_draw_text(secondfont, al_map_rgb(60, 200, 50), 
+                DISP_W-(DISP_W-DISP_H)/2 + 10, DISP_H/24, 0, "Energy Level:");
+            // Moving alien
+            al_draw_rectangle(DISP_W-(DISP_W-DISP_H)/2+10,DISP_H/2-15,DISP_W-15, DISP_H-10, al_map_rgb(255,255,255), 3);
+            al_draw_text(secondfont, al_map_rgb(2, 255, 188), 
+                DISP_W-(DISP_W-DISP_H)/4, DISP_H/2, ALLEGRO_ALIGN_CENTER, "Now moving");
+            // al_draw_bitmap(sprites.alien_down, 300, 300, 0);
+            // al_draw_bitmap(sprites.alien_up, 300, 330, 0);
+            // al_draw_bitmap(sprites.alien_left, 300, 360, 0);
+            // al_draw_bitmap(sprites.alien_right, 300, 390, 0);
 
             // for(int i = 1; i < DISP_H+1; i=i+20)
             // {
@@ -171,8 +189,10 @@ int main()
         }
     }
 
+    sprites_deinit();
     al_destroy_font(font);
     al_destroy_font(titlefont);
+    al_destroy_font(secondfont);
     disp_deinit();
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);

@@ -56,8 +56,8 @@ struct Report
 
 /*=========================== GLOBAL VARIABLES ===========================*/
 static int currentThread = -1;
-static struct AlienArray alienArray;
-static struct Report report;
+struct AlienArray alienArray;
+struct Report report;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static int finished = 0;
 

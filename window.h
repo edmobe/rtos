@@ -7,6 +7,7 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_native_dialog.h>
+#include <allegro5/allegro_image.h>
 
 #include "mainlogic.h"
 
@@ -35,6 +36,28 @@ ALLEGRO_DISPLAY* disp;
 void disp_init();
 
 void disp_deinit();
+
+/*========================= SPRITES ==========================*/
+#define ALIEN_W 25
+#define ALIEN_H 21
+
+typedef struct SPRITES
+{
+    ALLEGRO_BITMAP* _sheet;
+    ALLEGRO_BITMAP* alien_down;
+    ALLEGRO_BITMAP* alien_up;
+    ALLEGRO_BITMAP* alien_right;
+    ALLEGRO_BITMAP* alien_left;
+} SPRITES;
+SPRITES sprites;
+
+ALLEGRO_COLOR bitmap_colors[MAX_PROCESSES];
+
+ALLEGRO_BITMAP* sprite_grab(int x, int y, int w, int h);
+
+void sprites_init();
+
+void sprites_deinit();
 
 /*======================== KEYBOARD ==========================*/
 #define KEY_SEEN     1
@@ -73,8 +96,6 @@ void button_init(int x, int y, int w, int h, void (*f)(), char *text, ALLEGRO_CO
 
 void button_draw(ALLEGRO_FONT *font);
 
-void sayhello();
-
 /*========================== COMBO ===========================*/
 void set_mode();
 
@@ -104,4 +125,17 @@ void datainput_draw(ALLEGRO_FONT* font);
 
 void add_alien();
 
+/*========================= RUNNING ==========================*/
 void startlogic();
+
+/*=========================== MAZE ===========================*/
+
+#define MAZE_W 720
+#define MAZE_H 720
+#define MBLOCK (MAZE_W / DIMENSIONS)
+
+void maze_init();
+
+void maze_update();
+
+void maze_draw();

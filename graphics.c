@@ -26,6 +26,36 @@ void disp_deinit()
     al_destroy_display(disp);
 }
 
+/*======================== SPRITES ===========================*/
+ALLEGRO_BITMAP* sprite_grab(int x, int y, int w, int h)
+{
+    ALLEGRO_BITMAP* sprite = al_create_sub_bitmap(sprites._sheet, x, y, w, h);
+    must_init(sprite, "sprite grab");
+    return sprite;
+}
+
+void sprites_init()
+{
+    sprites._sheet = al_load_bitmap("data/alienspritesheet.png");
+    must_init(sprites._sheet, "spritesheet");
+
+    sprites.alien_down = sprite_grab(3, 6, ALIEN_W, ALIEN_H);
+    sprites.alien_right = sprite_grab(5, 36, ALIEN_H, ALIEN_W);
+    sprites.alien_left = sprite_grab(5, 68, ALIEN_H, ALIEN_W);
+    sprites.alien_up = sprite_grab(3, 100, ALIEN_W, ALIEN_H);
+
+}
+
+void sprites_deinit()
+{
+    al_destroy_bitmap(sprites.alien_down);
+    al_destroy_bitmap(sprites.alien_right);
+    al_destroy_bitmap(sprites.alien_left);
+    al_destroy_bitmap(sprites.alien_up);
+
+    al_destroy_bitmap(sprites._sheet);
+}
+
 /*======================== KEYBOARD ==========================*/
 void keyboard_init()
 {
@@ -89,8 +119,9 @@ void button_draw(ALLEGRO_FONT* font)
         if (thisb.active) {
             al_draw_filled_rectangle(thisb.x, thisb.y, thisb.x + thisb.w,
                 thisb.y + thisb.h, thisb.color);
-            al_draw_text(font, al_map_rgb(0, 0, 0), thisb.x+(thisb.w-al_get_text_width(font, thisb.text))/2, 
-                thisb.y+(thisb.h-al_get_font_line_height(font))/2, 0, thisb.text);
+            al_draw_text(font, al_map_rgb(0, 0, 0), thisb.x+thisb.w/2, 
+                thisb.y+(thisb.h-al_get_font_line_height(font))/2, 
+                    ALLEGRO_ALIGN_CENTER, thisb.text);
         }
     }
 }
@@ -227,14 +258,40 @@ void click_update(ALLEGRO_EVENT* event)
 /*======================== TEXT AREA ==========================*/
 void textarea_init()
 {
-
+    time_t t;
+   
+    /* Intializes random number generator */
+    srand((unsigned) time(&t));
+    for (int i = 0; i < MAX_PROCESSES; i++){
+        if (i == 0)
+            bitmap_colors[i] = al_map_rgb(0,255,0);
+        else
+            bitmap_colors[i] = al_map_rgb(rand()%256, rand()%256, rand()%256);
+    }
 }
 
 void textarea_draw(ALLEGRO_FONT* font)
 {
-    if (mode == AUTO) {
+    if (mode == AUTO || (mode == MANUAL && running)) {
+        al_draw_rectangle(1,(DISP_H/24)*7+5,(DISP_W-DISP_H)/2-6, 
+            (DISP_H/24)*20, al_map_rgb(255,255,255), 2);
+        int counter = 0;
         
-        al_draw_rectangle(1,(DISP_H/24)*7+10,(DISP_W-DISP_H)/2-6, (DISP_H/24)*20, al_map_rgb(255,255,255), 2);
+        for (int i = 7; counter < alienArray.length; i=i+2) {
+            al_draw_rectangle(10,(DISP_H/24)*i+10,(DISP_W-DISP_H)/2-15, 
+                (DISP_H/24)*(i+2)+5, al_map_rgb(255,255,255), 2);
+            float temp = ((DISP_H/24)*i+10) + (((DISP_H/24)*(i+2)+5) - ((DISP_H/24)*i+10))/2;
+            if (counter == 0)
+                al_draw_bitmap(sprites.alien_down, 15, temp-10, 0);
+            else
+                al_draw_tinted_bitmap(sprites.alien_down, bitmap_colors[counter] ,15 , temp-10, 0);
+            al_draw_textf(font, al_map_rgb_f(1,1,1), 55, temp-20, 0, "ALIEN %d", counter+1);
+            al_draw_textf(font, al_map_rgb_f(1,1,1), 55, temp+5, 0, "ENERGY: %d", 
+                alienArray.aliens[counter].energy);
+            al_draw_textf(font, al_map_rgb_f(1,1,1), 125, temp+5, 0, "PERIOD: %d", 
+                alienArray.aliens[counter].period);
+            counter++;
+        }
     }
 }
 
@@ -297,6 +354,22 @@ void datainput_draw(ALLEGRO_FONT* font)
     } 
 }
 
+void add_alien()
+{
+    if (period <= energy) {
+        printf("The period needs to be greater then the energy.\n");
+        return;
+    } 
+    if (energy == 0 || period == 0) {
+        printf("The values can't be cero.\n");
+        return;       
+    }
+    append(energy, period, 0);
+    energy = 0;
+    period = 0;
+}
+
+/*========================= RUNNING ==========================*/
 void startlogic()
 {
     running = true;
@@ -305,4 +378,27 @@ void startlogic()
     wbuttons[0].text = "Running";
     combobox[0].active = false;
     combobox[1].active = false;
+}
+
+/*=========================== MAZE ===========================*/
+void maze_init()
+{
+
+}
+
+void maze_update()
+{
+
+}
+
+void maze_draw()
+{
+    for (int i = 0; i < DIMENSIONS; i++) {
+        for (int j = 0; j < DIMENSIONS; j++) {
+            if (MAZE[i][j] == 1) {
+                al_draw_rectangle((DISP_W-DISP_H)/2+MBLOCK*j+4,MBLOCK*i+4,
+                    (DISP_W-DISP_H)/2+MBLOCK*(j+1)-4, MBLOCK*(i+1)-4,al_map_rgb(143, 35, 48), 4);
+            }
+        }
+    }
 }
