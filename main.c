@@ -563,9 +563,9 @@ int main()
     printMaze();
 
     int iterationCounter = 0;
-    while (!finished && iterationCounter != 30)
+    while (!finished && iterationCounter != 100)
     {
-        rm(iterationCounter);
+        edf(iterationCounter);
         usleep(50000);
         iterationCounter++;
     }

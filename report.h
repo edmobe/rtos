@@ -12,7 +12,7 @@
 #include <time.h>
 
 const int HEIGHT = 600;
-const int WIDTH = 1270;
+const int WIDTH = 800;
 const int WidthDivider = 1;
 
 const float DELAY = 0.1;

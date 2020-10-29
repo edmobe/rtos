@@ -143,7 +143,7 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
         case ALLEGRO_KEY_LEFT:
             x -=  SPEED;
         break;
-
+        /*
         case ALLEGRO_KEY_DOWN:
             y +=  SPEED;
         break;
@@ -151,7 +151,7 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
         case ALLEGRO_KEY_UP:
             y -=  SPEED;
         break;
-
+        */
         default:
         break;      
         }
@@ -288,7 +288,5 @@ void CameraUpdate (float *cameraPosition, float x, float y, int width, int heigh
     if (cameraPosition[0] > abs(WIDTH - (S1*2 + S1 * reportIteration))){
         cameraPosition[0] = abs(WIDTH - (S1*2 + S1 * reportIteration));
     }
-    
 
-    printf("%f, %f \n", cameraPosition[0], cameraPosition[1]);
 }
