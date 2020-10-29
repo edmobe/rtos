@@ -1,3 +1,6 @@
+#ifndef HEADER_FILE
+#define HEADER_FILE
+
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_primitives.h>
@@ -8,8 +11,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-const int ALTO = 600;
-const int ANCHO = 1270;
+const int HEIGHT = 600;
+const int WIDTH = 1270;
 const int WidthDivider = 1;
 
 const float DELAY = 0.1;
@@ -33,9 +36,6 @@ typedef struct BLOCK {
 
 } BLOCK;
 
-void GenDividers (int min, ALLEGRO_FONT *font);
-void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font);
-void GenAlgoReport (int *order, BLOCK *aliens, ALLEGRO_FONT *font, char *text);
-ALLEGRO_COLOR RandomColor ();
 
-void CameraUpdate (float *cameraPosition, float x, float y, int width, int height);
+
+#endif
