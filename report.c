@@ -26,7 +26,7 @@ int main (){
     // Aliens
     // --------
 
-    /* BLOCK mar1;
+    BLOCK mar1;
     mar1.current_number = 0;
     mar1.duration = 1;
     mar1.period = 6;
@@ -56,7 +56,7 @@ int main (){
 
     BLOCK aliens[4] = {mar1, mar2, mar3, mar4};
 
-    int order[10] = {0,1,0,1,1,-1,2,2,2,3}; */
+    int order[10] = {0,1,0,1,1,-1,2,2,2,3};
     // ------------------
     // Allegro elements
     // ------------------
@@ -91,11 +91,11 @@ int main (){
     // -----------------
     // Generate Blocks
     // -----------------
-    /*
+    
     
     GenAlien(aliens, font);
     GenAlgoReport(order, aliens, font, "EDF");
-    */
+    
     al_draw_text(font_big, al_map_rgb(255,255,255), ANCHO / 2, 10, ALLEGRO_ALIGN_CENTER, TITLE);
     al_draw_text(font_small, al_map_rgb(255,255,255), 20, 30, ALLEGRO_ALIGN_CENTER, "Procesos");
 
@@ -146,7 +146,7 @@ void GenDividers (int min, ALLEGRO_FONT *font) {
         sprintf(current_num, "%d", time_current);
         al_draw_line(current, 50, current, ALTO - 50, al_map_rgb(255,255,255), 1.0);
         al_draw_text(font, al_map_rgb(255,255,255), current, ALTO - 40, ALLEGRO_ALIGN_CENTER, current_num);
-        current += min * 30;
+        current += S1;
         time_current += min;
     }
 }
@@ -167,12 +167,18 @@ void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font){
                 strcpy(id, marciano[i].id);
                 sprintf(num, "%d", it);
                 
-                al_draw_filled_rectangle(current_x + 2, current_y, (current_x + marciano[i].duration * S1) - 2 , current_y + S1, marciano[i].color);
-                al_draw_text(font, al_map_rgb(0,0,0), current_x + marciano[i].duration * S1 / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));
+                al_draw_filled_rectangle(current_x, current_y, (current_x + marciano[i].duration * S1 / WidthDivider) , current_y + S1, marciano[i].color);
+                if (marciano[i].duration < WidthDivider){
+                    al_draw_text(font, al_map_rgb(255,255,255), current_x + marciano[i].duration * (S1 / WidthDivider) / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));    
+                }
+                else {
+                    al_draw_text(font, al_map_rgb(0,0,0), current_x + marciano[i].duration * (S1 / WidthDivider) / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));
+                }
+                
                 it ++;
             }
             period ++;
-            current_x += WidthDivider * 30;
+            current_x += S1 / WidthDivider;
             
         }
 
@@ -196,9 +202,15 @@ void GenAlgoReport (int *order, BLOCK *marciano, ALLEGRO_FONT *font, char *text)
         strcpy(id, marciano[order[i]].id);
         sprintf(num, "%d", it);
         
-        al_draw_filled_rectangle(current_x + 2, current_y, (current_x + S1) - 2 , current_y + S1, marciano[order[i]].color);
-        al_draw_text(font, al_map_rgb(0,0,0), current_x + S1 / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, marciano[order[i]].id);
-        current_x += WidthDivider * 30;
+        al_draw_filled_rectangle(current_x, current_y, (current_x + S1 / WidthDivider) , current_y + S1, marciano[order[i]].color);
+        if (WidthDivider > 1){
+            al_draw_text(font, al_map_rgb(255,255,255), current_x + (S1 / WidthDivider) / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, marciano[order[i]].id);
+        }
+        else {
+            al_draw_text(font, al_map_rgb(0,0,0), current_x + (S1 / WidthDivider) / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, marciano[order[i]].id);
+        }
+        
+        current_x += S1 / WidthDivider;
     }
 }
 
