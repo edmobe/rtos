@@ -47,12 +47,17 @@ int main()
     //         printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
     // }
 
+/*=========================== GUI =============================*/
     must_init(al_init(), "allegro");
     must_init(al_install_keyboard(), "keyboard");
     must_init(al_install_mouse(), "mouse");
+    must_init(al_init_font_addon(), "font");
+    must_init(al_init_ttf_addon(), "ttfont");
+    // al_init_native_dialog_addon()
 
     int i;
-    in = true;
+    done = false;
+    redraw = true;
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     must_init(timer, "timer");
@@ -64,11 +69,14 @@ int main()
     al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
 
-    ALLEGRO_DISPLAY* disp = al_create_display(640, 480);
+    ALLEGRO_DISPLAY* disp = al_create_display(DISP_W, DISP_H);
     must_init(disp, "display");
 
-    ALLEGRO_FONT* font = al_create_builtin_font();
+    ALLEGRO_FONT* font = al_load_ttf_font("fonts/_decterm.ttf", 14, 0);
     must_init(font, "font");
+
+    ALLEGRO_FONT* titlefont = al_load_ttf_font("fonts/_decterm.ttf", 36, 0);
+    must_init(titlefont, "title font");
 
     must_init(al_init_primitives_addon(), "primitives");
 
@@ -76,7 +84,11 @@ int main()
     if (actual_buttons > NUM_BUTTONS)
         actual_buttons = NUM_BUTTONS;
 
-    button_init(100,100,100,50, sayhello, al_map_rgb(255, 255, 255));
+    button_init((DISP_W-DISP_H)/6,(DISP_H/24)*5+10,(DISP_W-DISP_H)/6, (DISP_H/16), 
+        sayhello, "Start", al_map_rgb(0, 255, 0));
+    button_init((DISP_W-DISP_H)/6,(DISP_H/24)*22+10,(DISP_W-DISP_H)/6,(DISP_H/16), 
+        sayhello, "Add", al_map_rgb(255, 255, 255));
+    combo_init(3,(DISP_H/24)*3+10,(DISP_W-DISP_H)/2-13,(DISP_H/24));
 
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_display_event_source(disp));
@@ -84,8 +96,6 @@ int main()
     al_register_event_source(queue, al_get_mouse_event_source()); 
     // al_hide_mouse_cursor(disp);
 
-    bool done = false;
-    bool redraw = true;
     ALLEGRO_EVENT event;
 
     float x, y;
@@ -115,14 +125,7 @@ int main()
             case ALLEGRO_EVENT_TIMER:
                 if(key[ALLEGRO_KEY_ESCAPE])
                     done = true;
-            
-            case ALLEGRO_EVENT_MOUSE_ENTER_DISPLAY:
-                in = true;
-                break;
-
-            case ALLEGRO_EVENT_MOUSE_LEAVE_DISPLAY:
-                in = false;
-                break;
+                // break;
 
                 // x += dx;
                 // y += dy;
@@ -154,8 +157,8 @@ int main()
                 // for(int i = 0; i < ALLEGRO_KEY_MAX; i++)
                 //     key[i] &= KEY_SEEN;
 
-                // redraw = true;
-                // break;
+                redraw = true;
+                break;
 
             // case ALLEGRO_EVENT_MOUSE_AXES:
             //     dx += event.mouse.dx * 0.1;
@@ -183,9 +186,29 @@ int main()
         if(redraw && al_is_event_queue_empty(queue))
         {
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_textf(font, al_map_rgb(255, 255, 255), 0, 0, 0, "X: %.1f Y: %.1f", x, y);
-            al_draw_filled_rectangle(x, y, x + 10, y + 10, al_map_rgb(255, 0, 0));
-            button_draw();
+            // Title
+            al_draw_text(titlefont, al_map_rgb(0, 200, 50), 
+                ((DISP_W-DISP_H)/2-al_get_text_width(titlefont, "RTOS"))/2, DISP_H/24, 0, "RTOS");
+            // Title mark
+            al_draw_rectangle(3,3,(DISP_W-DISP_H)/2-10, (DISP_H/24)*3, al_map_rgb(100,100,100), 3);
+            al_draw_rectangle(20,20,(DISP_W-DISP_H)/2-27, (DISP_H/24)*3-17, al_map_rgb(100,100,100), 10);
+            // Separators
+            al_draw_line((DISP_W-DISP_H)/2, 0, (DISP_W-DISP_H)/2, DISP_H, al_map_rgb_f(1, 1, 1), 1);
+            al_draw_line((DISP_W-DISP_H)/2-4, 0, (DISP_W-DISP_H)/2-4, DISP_H, al_map_rgb_f(1, 1, 1), 1);
+            al_draw_line(DISP_W-(DISP_W-DISP_H)/2, 0, DISP_W-(DISP_W-DISP_H)/2, DISP_H, al_map_rgb_f(1, 1, 1), 1);
+            al_draw_line(DISP_W-(DISP_W-DISP_H)/2+4, 0, DISP_W-(DISP_W-DISP_H)/2+4, DISP_H, al_map_rgb_f(1, 1, 1), 1);
+            // Combobox
+            combo_draw(font);
+            // for(int i = 1; i < DISP_H+1; i=i+20)
+            // {
+            //     al_draw_filled_triangle(275, i, 258, i+10, 275, i+20, 
+            //         al_map_rgb_f(1,1,1));
+            //     al_draw_filled_triangle(1005, i, 1022, i+10, 1005, i+20, 
+            //         al_map_rgb_f(1,1,1));
+            // }
+            // al_draw_textf(font, al_map_rgb(255, 255, 255), 0, 0, 0, "X: %.1f Y: %.1f", x, y);
+            // al_draw_filled_rectangle(x, y, x + 10, y + 10, al_map_rgb(255, 0, 0));
+            button_draw(font);
 
             al_flip_display();
 
@@ -194,6 +217,7 @@ int main()
     }
 
     al_destroy_font(font);
+    al_destroy_font(titlefont);
     al_destroy_display(disp);
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);
