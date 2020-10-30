@@ -14,6 +14,7 @@ const int FPS = 60;
 
 const int S1 = 30;
 const int S2 = 15;
+
 int current_height = HEIGHTROW;
 
 void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char *method){
@@ -171,8 +172,10 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
         
         al_clear_to_color(al_map_rgb(0,0,0));
         
-        GenDividers(WidthDivider, font, reportIterations); 
+        GenDividers(WidthDivider, font, reportIterations);
+
         GenAlien(aliens, font, alienLength, reportIterations);
+
         GenAlgoReport(log, aliens, font, method, reportIterations);
         al_draw_text(font_big, al_map_rgb(255,255,255), WIDTH / 2, 10, ALLEGRO_ALIGN_CENTER, TITLE);
         al_draw_text(font_small, al_map_rgb(255,255,255), 20, 30, ALLEGRO_ALIGN_CENTER, "Procesos");
@@ -211,33 +214,39 @@ void GenDividers (int min, ALLEGRO_FONT *font, int reportIteration) {
 // ----------------------
 
 void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength, int reportIteration){
+    
     for (int i = 0; i < alienLength; i++){
         int current_x = 40, current_y = current_height;
         int period = 0, it = 0;
         char num[10], id[2];
+        printf("%s. Iteration %d\n", marciano[i].id, marciano[i].current_number);
         al_draw_text(font, al_map_rgb(255,255,255), 20, (current_y*2 + 30) / 2 - 5, ALLEGRO_ALIGN_CENTER, marciano[i].id);
         
         while (current_x <  S1*2 + S1 * reportIteration) {
-            if ((period % marciano[i].period) == 0){
-                strcpy(id, marciano[i].id);
-                sprintf(num, "%d", it);
-                
-                al_draw_filled_rectangle(current_x, current_y, (current_x + marciano[i].duration * S1 / WidthDivider) , current_y + S1, marciano[i].color);
-                if (marciano[i].duration < WidthDivider){
-                    al_draw_text(font, al_map_rgb(255,255,255), current_x + marciano[i].duration * (S1 / WidthDivider) / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));    
-                }
-                else {
-                    al_draw_text(font, al_map_rgb(0,0,0), current_x + marciano[i].duration * (S1 / WidthDivider) / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));
-                }
-                
-                it ++;
+                if ((period % marciano[i].period) == 0){
+                        strcpy(id, marciano[i].id);
+                        sprintf(num, "%d", it);
+                        al_draw_filled_rectangle(current_x, current_y, (current_x + marciano[i].duration * S1 / WidthDivider) , current_y + S1, marciano[i].color);
+                        if (marciano[i].duration < WidthDivider){
+                            al_draw_text(font, al_map_rgb(255,255,255), current_x + marciano[i].duration * (S1 / WidthDivider) / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));    
+                        }
+                        else {
+                            al_draw_text(font, al_map_rgb(0,0,0), current_x + marciano[i].duration * (S1 / WidthDivider) / 2, current_y + 10, ALLEGRO_ALIGN_CENTER, strcat(id,num));
+                        }
+                        
+                        it ++;
+                    
             }
-            period ++;
             current_x += S1 / WidthDivider;
+            period ++;
+            
+            
+            
             
         }
-
+        
         current_height += 40;
+        
     }
     
     

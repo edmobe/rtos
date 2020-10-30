@@ -374,7 +374,7 @@ void add_alien()
         return;       
     }
     int temp1 = alienArray.length;
-    append(energy, period, 0);
+    append(energy, period, iterationCounter);
     int temp2 = alienArray.length;
     if (temp1 == temp2) {
         al_show_native_message_box(

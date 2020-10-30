@@ -161,6 +161,7 @@ int main()
         alien.current_number = 0;
         alien.duration = alienArray.aliens[i].energy;
         alien.period = alienArray.aliens[i].period;
+        alien.current_number = alienArray.aliens[i].appendedIteration;
         LetterStr[0] = currentLetter;
         strcpy(alien.id, LetterStr);
         
