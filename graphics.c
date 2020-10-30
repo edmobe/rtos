@@ -373,7 +373,20 @@ void add_alien()
         printf("The values can't be cero.\n");
         return;       
     }
+    int temp1 = alienArray.length;
     append(energy, period, 0);
+    int temp2 = alienArray.length;
+    if (temp1 == temp2) {
+        al_show_native_message_box(
+            disp,
+            "Can't schedule the alien",
+            "This alien is going anywhere.",
+            "The alien wasn't unable to enter the maze"
+            " because the process wasn't schedulable.",
+            NULL,
+            ALLEGRO_MESSAGEBOX_OK_CANCEL);
+
+    }
     energy = 0;
     period = 0;
 }
