@@ -1,5 +1,7 @@
 #include "mainlogic.h"
 
+// int *thisthr = &currentThread; 
+
 /*=========================== GENERAL SCHEDULING METHODS ===========================*/
 void addSchedulingIterationToReport(int iteration)
 {

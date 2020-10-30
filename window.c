@@ -28,7 +28,7 @@ int main()
     // printMaze();
 
     // int iterationCounter = 0;
-    // while (!finished)
+    // while (!finished && iterationCounter != 100)
     // {
     //     rm(iterationCounter);
     //     sleep(1);
@@ -121,12 +121,14 @@ int main()
                 mode_update();
                 datainput_update();
                 maze_update();
+                start_update();
 
                 if(key[ALLEGRO_KEY_ESCAPE])
                     done = true;
 
                 redraw = true;
-                frames++;
+                if (running)
+                    frames++;
                 break;
 
             case ALLEGRO_EVENT_DISPLAY_CLOSE:
@@ -167,6 +169,7 @@ int main()
             // Energy inidicator
             al_draw_text(secondfont, al_map_rgb(60, 200, 50), 
                 DISP_W-(DISP_W-DISP_H)/2+10, DISP_H/24, 0, "Energy Level:");
+            energy_draw(secondfont);
             // Selected algorithm
             al_draw_textf(secondfont, al_map_rgb(255, 234, 0), 
                 DISP_W-(DISP_W-DISP_H)/2+10, DISP_H/2-DISP_H/8, 0, "Algorithm: %s", algorithm == RM ? "RM":"RF");
@@ -174,20 +177,7 @@ int main()
             al_draw_rectangle(DISP_W-(DISP_W-DISP_H)/2+10,DISP_H/2-15,DISP_W-15, DISP_H-10, al_map_rgb(255,255,255), 3);
             al_draw_text(secondfont, al_map_rgb(2, 255, 188), 
                 DISP_W-(DISP_W-DISP_H)/4, DISP_H/2, ALLEGRO_ALIGN_CENTER, "Now moving");
-            // al_draw_bitmap(sprites.alien_down, 300, 300, 0);
-            // al_draw_bitmap(sprites.alien_up, 300, 330, 0);
-            // al_draw_bitmap(sprites.alien_left, 300, 360, 0);
-            // al_draw_bitmap(sprites.alien_right, 300, 390, 0);
-
-            // for(int i = 1; i < DISP_H+1; i=i+20)
-            // {
-            //     al_draw_filled_triangle(275, i, 258, i+10, 275, i+20, 
-            //         al_map_rgb_f(1,1,1));
-            //     al_draw_filled_triangle(1005, i, 1022, i+10, 1005, i+20, 
-            //         al_map_rgb_f(1,1,1));
-            // }
-            // al_draw_textf(font, al_map_rgb(255, 255, 255), 0, 0, 0, "X: %.1f Y: %.1f", x, y);
-            // al_draw_filled_rectangle(x, y, x + 10, y + 10, al_map_rgb(255, 0, 0));
+            moving_draw(secondfont);
 
             al_flip_display();
 

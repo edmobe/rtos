@@ -379,6 +379,7 @@ void add_alien()
 }
 
 /*========================= RUNNING ==========================*/
+
 void startlogic()
 {
     running = true;
@@ -387,13 +388,30 @@ void startlogic()
     wbuttons[0].text = "Running";
     combobox[0].active = false;
     combobox[1].active = false;
+    iterationCounter = 0;
+    if (algorithm == EDF)
+        edf(iterationCounter);
+    else
+        rm(iterationCounter);
+    internthread = alienArray.higherPriorityIndex;
 }
 
-void start_uptdate()
+void start_update()
 {
-    if (frames >= 60) {
+    if ((iterationCounter>=100 || finished) && !running) {
+        // Generate report here
+        printf("REPORTE\n");
+        return;
+    }
+
+    if (frames >= 30) {
         frames = 0;
-        printf("0.5 has passed\n");
+        if (algorithm == EDF)
+            edf(iterationCounter);
+        else
+            rm(iterationCounter);
+        internthread = alienArray.higherPriorityIndex;
+        iterationCounter++;
     }
 }
 
@@ -418,4 +436,57 @@ void maze_draw()
             }
         }
     }
+    for (int i = 0; i < alienArray.length; i++) {
+        if (alienArray.aliens[i].posX != 0 || alienArray.aliens[i].posY != 0) {
+            int thisx = alienArray.aliens[i].posX;
+            int thisy = alienArray.aliens[i].posY;
+            ALLEGRO_BITMAP* thissprite;
+            switch (alienArray.aliens[i].direction) {
+                case 'r':
+                    thissprite = sprites.alien_right;
+                    break;
+                case 'l':
+                    thissprite = sprites.alien_left;
+                    break;
+                case 'u':
+                    thissprite = sprites.alien_up;
+                    break;
+                case 'd':
+                    thissprite = sprites.alien_down;
+                    break;
+            }
+            if (i == 0) 
+                al_draw_bitmap(thissprite, (DISP_W-DISP_H)/2+MBLOCK*thisx+6, MBLOCK*thisy+6, 0);
+            else
+                al_draw_tinted_bitmap(thissprite, bitmap_colors[i],(DISP_W-DISP_H)/2+MBLOCK*thisx+6, 
+                    MBLOCK*thisy+6, 0);
+        }
+    }
+}
+
+/*========================= ENERGY ============================*/
+void energy_draw(ALLEGRO_FONT* font) {
+    if (running && internthread != -1){
+        int thisener = alienArray.remainingEnergies[internthread];
+        for (int i = 0; i < thisener; i ++) {
+            float xsp = DISP_W-(DISP_W-DISP_H)/2+10+al_get_text_width(font, "Energy Level:") + 12 * i;
+            al_draw_filled_rectangle( xsp, DISP_H/24, xsp + 10, DISP_H/24+al_get_font_line_height(font), 
+                al_map_rgb_f(1,1,1));
+        }
+    }
+}
+
+/*===================== MOVING ALIEN ==========================*/
+void moving_draw(ALLEGRO_FONT* font)
+{
+    if (running && internthread != -1){
+        if (internthread == 0)
+            al_draw_bitmap(sprites.alien_down, DISP_W-(DISP_W-DISP_H)/4-ALIEN_W/2, DISP_H/2 + 40, 0);
+        else
+            al_draw_tinted_bitmap(sprites.alien_down, bitmap_colors[internthread],
+                 DISP_W-(DISP_W-DISP_H)/4-ALIEN_W/2, DISP_H/2 + 40, 0);
+        al_draw_textf(font, al_map_rgb_f(1,1,1), DISP_W-(DISP_W-DISP_H)/4, DISP_H/2 + 100, 
+            ALLEGRO_ALIGN_CENTER, "ALIEN %d", internthread+1);
+    }
+
 }

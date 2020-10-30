@@ -76,7 +76,7 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
     ALLEGRO_FONT* font = al_load_font(FONTNAME, 15, 0);
     ALLEGRO_FONT* font_big = al_load_font(FONTNAME, 30, 0);
     ALLEGRO_TRANSFORM camera;
-    ALLEGRO_BITMAP* background = al_load_bitmap("palm-tree.png");
+    ALLEGRO_BITMAP* background = al_load_bitmap("data/palm-tree.png");
     
     // --------
     // Events

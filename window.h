@@ -25,6 +25,9 @@ bool done;
 bool redraw;
 bool running;
 long frames;
+int iterationCounter;
+int energylevel;
+int internthread;
 
 void must_init(bool test, const char *description);
 
@@ -146,3 +149,9 @@ void maze_init();
 void maze_update();
 
 void maze_draw();
+
+/*========================= ENERGY ============================*/
+void energy_draw(ALLEGRO_FONT* font);
+
+/*===================== MOVING ALIEN ==========================*/
+void moving_draw(ALLEGRO_FONT* font);
