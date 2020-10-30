@@ -407,6 +407,7 @@ void startlogic()
     else
         rm(iterationCounter);
     internthread = alienArray.higherPriorityIndex;
+    iterationCounter++;
 }
 
 void start_update()
