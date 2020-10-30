@@ -366,11 +366,23 @@ void datainput_draw(ALLEGRO_FONT* font)
 void add_alien()
 {
     if (period <= energy) {
-        printf("The period needs to be greater then the energy.\n");
+        al_show_native_message_box(
+            disp,
+            "Can't schedule the alien",
+            "This alien is going anywhere.",
+            "The period needs to be greater than the energy.",
+            NULL,
+            ALLEGRO_MESSAGEBOX_OK_CANCEL);
         return;
     } 
     if (energy == 0 || period == 0) {
-        printf("The values can't be cero.\n");
+        al_show_native_message_box(
+            disp,
+            "Can't schedule the alien",
+            "This alien is going anywhere.",
+            "The values of energy or period can't be cero.",
+            NULL,
+            ALLEGRO_MESSAGEBOX_OK_CANCEL);
         return;       
     }
     int temp1 = alienArray.length;
