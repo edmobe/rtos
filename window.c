@@ -8,51 +8,6 @@ int main()
     initialize();
     srand(time(NULL));
 
-    // /* Add processes */
-    // append(1, 6, 0);
-    // append(2, 9, 0);
-    // append(6, 18, 0);
-
-    // /* Modify positions to test exit */
-    // /*
-    // alienArray.aliens[0].posX = 17;
-    // alienArray.aliens[0].posY = 1;
-    // alienArray.aliens[1].posX = 16;
-    // alienArray.aliens[1].posY = 1;
-    // */
-
-    // printf("Created array is: ");
-    // printAlienArray();
-    // printf("\n");
-
-    // printMaze();
-
-    // int iterationCounter = 0;
-    // while (!finished && iterationCounter != 100)
-    // {
-    //     rm(iterationCounter);
-    //     sleep(1);
-    //     iterationCounter++;
-    // }
-
-    // printf("================== REPORT ==================\n");
-
-    // // Print processes
-    // for (int i = 0; i < alienArray.length; i++)
-    // {
-    //     printf("Process %d initialized in cycle %d\n",
-    //            alienArray.aliens[i].id, alienArray.aliens[i].appendedIteration);
-    // }
-
-    // // Print report
-    // for (int i = 0; i < report.iterations; i++)
-    // {
-    //     if (report.log[i] == -1)
-    //         printf("[%d - %d]: ?\n", i, i + 1);
-    //     else
-    //         printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
-    // }
-
 /*=========================== GUI =============================*/
     must_init(al_init(), "allegro");
     must_init(al_install_keyboard(), "keyboard");
@@ -123,7 +78,7 @@ int main()
                 maze_update();
                 start_update();
 
-                if(key[ALLEGRO_KEY_ESCAPE])
+                if(key[ALLEGRO_KEY_ESCAPE] || (!running && iterationCounter>0) || *isFinished)
                     done = true;
 
                 redraw = true;
@@ -172,7 +127,7 @@ int main()
             energy_draw(secondfont);
             // Selected algorithm
             al_draw_textf(secondfont, al_map_rgb(255, 234, 0), 
-                DISP_W-(DISP_W-DISP_H)/2+10, DISP_H/2-DISP_H/8, 0, "Algorithm: %s", algorithm == RM ? "RM":"RF");
+                DISP_W-(DISP_W-DISP_H)/2+10, DISP_H/2-DISP_H/8, 0, "Algorithm: %s", algorithm == RM ? "RM":"EDF");
             // Moving alien
             al_draw_rectangle(DISP_W-(DISP_W-DISP_H)/2+10,DISP_H/2-15,DISP_W-15, DISP_H-10, al_map_rgb(255,255,255), 3);
             al_draw_text(secondfont, al_map_rgb(2, 255, 188), 
@@ -192,6 +147,35 @@ int main()
     disp_deinit();
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);
+
+    printf("================== REPORT ==================\n");
+    BLOCK AliensReport[alienArray.length];
+    char currentLetter = 'A', LetterStr[1];
+    // Print processes
+    for (int i = 0; i < alienArray.length; i++)
+    {
+        printf("Process %d initialized in cycle %d\n",
+               alienArray.aliens[i].id, alienArray.aliens[i].appendedIteration);
+
+        BLOCK alien;
+        alien.current_number = 0;
+        alien.duration = alienArray.aliens[i].energy;
+        alien.period = alienArray.aliens[i].period;
+        LetterStr[0] = currentLetter;
+        strcpy(alien.id, LetterStr);
+        
+        AliensReport[i] = alien;
+        currentLetter ++;
+    }
+    Report(AliensReport, report.log, alienArray.length, report.iterations, algorithm == RM ? "RM":"EDF");
+    // Print report
+    for (int i = 0; i < report.iterations; i++)
+    {
+        if (report.log[i] == -1)
+            printf("[%d - %d]: ?\n", i, i + 1);
+        else
+            printf("[%d - %d]: Process %d\n", i, i + 1, report.log[i]);
+    }
 
     return 0;
 }

@@ -11,22 +11,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-const int HEIGHT = 600;
-const int WIDTH = 800;
-const int WidthDivider = 1;
-
-const float DELAY = 0.1;
-const int TIMEDIVIDERS = 100;
-const int HEIGHTROW = 60;
-const char *FONTNAME = "fonts/_decterm.ttf";
-const char *TITLE = "Reporte generado";
-const int SPEED = 10;
-const int FPS = 60;
-
-const int S1 = 30;
-const int S2 = 15;
-int current_height = HEIGHTROW;
-
 typedef struct BLOCK {
     char id[10];
     int duration;
@@ -36,6 +20,12 @@ typedef struct BLOCK {
 
 } BLOCK;
 
+void GenDividers (int min, ALLEGRO_FONT *font, int reportIteration);
+void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength, int reportIteration);
+void GenAlgoReport (int *order, BLOCK *marciano, ALLEGRO_FONT *font, char *text, int reportIterations);
+void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char *method);
+ALLEGRO_COLOR RandomColor ();
 
+void CameraUpdate (float *cameraPosition, float x, float y, int width, int height, int reportIteration);
 
 #endif

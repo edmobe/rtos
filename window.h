@@ -10,6 +10,7 @@
 #include <allegro5/allegro_image.h>
 
 #include "mainlogic.h"
+#include "report.h"
 
 enum {
     MANUAL = 1,
@@ -28,6 +29,7 @@ long frames;
 int iterationCounter;
 int energylevel;
 int internthread;
+extern int *isFinished;
 
 void must_init(bool test, const char *description);
 

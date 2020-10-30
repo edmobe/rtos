@@ -1,5 +1,6 @@
 #include "mainlogic.h"
 
+int *isFinished = &finished;
 // int *thisthr = &currentThread; 
 
 /*=========================== GENERAL SCHEDULING METHODS ===========================*/
