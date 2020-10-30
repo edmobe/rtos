@@ -114,6 +114,7 @@ void Report(BLOCK *aliens, int *log, int alienLength, int reportIterations, char
     
     for (int i = 0; i < alienLength; i++){
         aliens[i].color = RandomColor();
+        printf("%s. Iteration %d\n", aliens[i].id, aliens[i].current_number);
     }
     
     GenDividers(WidthDivider, font, reportIterations); 
@@ -219,10 +220,11 @@ void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength, int reportI
         int current_x = 40, current_y = current_height;
         int period = 0, it = 0;
         char num[10], id[2];
-        printf("%s. Iteration %d\n", marciano[i].id, marciano[i].current_number);
+        
         al_draw_text(font, al_map_rgb(255,255,255), 20, (current_y*2 + 30) / 2 - 5, ALLEGRO_ALIGN_CENTER, marciano[i].id);
         
         while (current_x <  S1*2 + S1 * reportIteration) {
+            if (current_x >= (40 + marciano[i].current_number * 30)){
                 if ((period % marciano[i].period) == 0){
                         strcpy(id, marciano[i].id);
                         sprintf(num, "%d", it);
@@ -235,10 +237,12 @@ void GenAlien (BLOCK *marciano, ALLEGRO_FONT *font, int alienLength, int reportI
                         }
                         
                         it ++;
-                    
+                        
+                }   
+                period ++;
             }
             current_x += S1 / WidthDivider;
-            period ++;
+            
             
             
             
